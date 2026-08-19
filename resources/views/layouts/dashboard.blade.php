@@ -14,6 +14,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="font-sans antialiased bg-slate-50 text-slate-900" x-data="{ sidebarOpen: false }">
         @php($role = auth()->user()->getRoleNames()->first())
@@ -146,5 +147,7 @@
                 </nav>
             </div>
         </div>
+
+        @livewireScripts
     </body>
 </html>
