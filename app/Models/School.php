@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class School extends Model
 {
@@ -20,11 +21,18 @@ class School extends Model
         'city',
         'country',
         'logo',
+        'primary_color',
+        'secondary_color',
         'timezone',
         'currency',
         'academic_year',
         'status',
     ];
+
+    public function logoUrl(): ?string
+    {
+        return $this->logo ? Storage::disk('public')->url($this->logo) : null;
+    }
 
     public function users(): HasMany
     {

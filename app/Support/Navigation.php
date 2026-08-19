@@ -18,7 +18,7 @@ class Navigation
 
         $byRole = [
             'super_admin' => [
-                ['label' => 'Schools', 'icon' => 'fa-school', 'route' => null],
+                ['label' => 'Schools', 'icon' => 'fa-school', 'route' => 'super-admin.schools'],
                 ['label' => 'Admins', 'icon' => 'fa-user-shield', 'route' => null],
                 ['label' => 'System Settings', 'icon' => 'fa-gears', 'route' => null],
                 ['label' => 'Analytics', 'icon' => 'fa-chart-line', 'route' => null],
@@ -28,28 +28,29 @@ class Navigation
                 ['label' => 'Teachers', 'icon' => 'fa-chalkboard-user', 'route' => 'school-admin.teachers'],
                 ['label' => 'Classes', 'icon' => 'fa-layer-group', 'route' => 'school-admin.classes'],
                 ['label' => 'Subjects', 'icon' => 'fa-book', 'route' => 'school-admin.subjects'],
-                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => null],
+                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'school-admin.attendance'],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => null],
                 ['label' => 'Exams', 'icon' => 'fa-file-pen', 'route' => null],
                 ['label' => 'CMS', 'icon' => 'fa-newspaper', 'route' => null],
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => null],
+                ['label' => 'School Profile', 'icon' => 'fa-palette', 'route' => 'school-admin.settings'],
             ],
             'teacher' => [
                 ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => null],
-                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => null],
+                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'teacher.attendance'],
                 ['label' => 'Grades', 'icon' => 'fa-file-pen', 'route' => null],
                 ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => null],
             ],
             'student' => [
                 ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => null],
-                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => null],
+                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'student.attendance'],
                 ['label' => 'Grades', 'icon' => 'fa-graduation-cap', 'route' => null],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => null],
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => null],
             ],
             'parent' => [
                 ['label' => 'My Children', 'icon' => 'fa-child-reaching', 'route' => null],
-                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => null],
+                ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'parent.attendance'],
                 ['label' => 'Performance', 'icon' => 'fa-graduation-cap', 'route' => null],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => null],
                 ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => null],

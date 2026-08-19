@@ -19,8 +19,13 @@ class Dashboard extends Component
         $user = auth()->user();
         $role = $user->getRoleNames()->first();
 
+        $quickLinks = collect(\App\Support\Navigation::forRole($role))
+            ->filter(fn ($item) => $item['route'] && $item['route'] !== 'dashboard' && \Illuminate\Support\Facades\Route::has($item['route']))
+            ->values();
+
         return view('livewire.dashboard', [
             'role' => $role,
+            'quickLinks' => $quickLinks,
             'metrics' => match ($role) {
                 'super_admin' => $this->superAdminMetrics(),
                 'school_admin' => $this->schoolAdminMetrics($user),

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php($school = auth()->user()->school)
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" style="--brand-primary: {{ $school?->primary_color ?? '#4f46e5' }}; --brand-secondary: {{ $school?->secondary_color ?? '#0ea5e9' }};">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="theme-color" content="#4f46e5">
+        <meta name="theme-color" content="{{ $school?->primary_color ?? '#4f46e5' }}">
 
         <title>{{ $title ?? config('app.name', 'School Management System') }}</title>
 
@@ -21,8 +22,12 @@
             <!-- Desktop sidebar -->
             <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-slate-900 text-white sticky top-0 h-screen">
                 <div class="flex items-center gap-2 px-5 h-16 border-b border-white/10">
-                    <div class="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center font-heading font-bold">S</div>
-                    <span class="font-heading font-bold text-lg tracking-tight">{{ config('app.name', 'SMS') }}</span>
+                    @if ($school?->logoUrl())
+                        <img src="{{ $school->logoUrl() }}" alt="{{ $school->name }}" class="h-8 w-8 rounded-lg object-cover">
+                    @else
+                        <div class="h-8 w-8 rounded-lg brand-gradient flex items-center justify-center font-heading font-bold">S</div>
+                    @endif
+                    <span class="font-heading font-bold text-lg tracking-tight truncate">{{ $school?->name ?? config('app.name', 'SMS') }}</span>
                 </div>
                 <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
                     @foreach (\App\Support\Navigation::forRole($role) as $item)
@@ -53,8 +58,12 @@
                 <aside class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white flex flex-col">
                     <div class="flex items-center justify-between gap-2 px-5 h-16 border-b border-white/10">
                         <div class="flex items-center gap-2">
-                            <div class="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center font-heading font-bold">S</div>
-                            <span class="font-heading font-bold text-lg">{{ config('app.name', 'SMS') }}</span>
+                            @if ($school?->logoUrl())
+                                <img src="{{ $school->logoUrl() }}" alt="{{ $school->name }}" class="h-8 w-8 rounded-lg object-cover">
+                            @else
+                                <div class="h-8 w-8 rounded-lg brand-gradient flex items-center justify-center font-heading font-bold">S</div>
+                            @endif
+                            <span class="font-heading font-bold text-lg truncate">{{ $school?->name ?? config('app.name', 'SMS') }}</span>
                         </div>
                         <button @click="sidebarOpen = false" class="min-h-touch min-w-touch text-slate-300">
                             <i class="fa-solid fa-xmark text-xl"></i>
@@ -93,7 +102,7 @@
 
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" @click.outside="open = false" class="flex items-center gap-2 min-h-touch rounded-lg px-2 hover:bg-slate-100">
-                            <div class="h-9 w-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold">
+                            <div class="h-9 w-9 rounded-full brand-gradient text-white flex items-center justify-center font-semibold">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
                             <span class="hidden sm:block text-sm font-medium text-slate-700">{{ auth()->user()->name }}</span>

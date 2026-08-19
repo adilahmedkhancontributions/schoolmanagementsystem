@@ -1,11 +1,15 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Livewire\Attendance\Mark as MarkAttendance;
+use App\Livewire\Attendance\MyAttendance;
 use App\Livewire\Dashboard;
 use App\Livewire\SchoolAdmin\Classes\Manage as ManageClasses;
+use App\Livewire\SchoolAdmin\Settings\Profile as SchoolProfile;
 use App\Livewire\SchoolAdmin\Students\Manage as ManageStudents;
 use App\Livewire\SchoolAdmin\Subjects\Manage as ManageSubjects;
 use App\Livewire\SchoolAdmin\Teachers\Manage as ManageTeachers;
+use App\Livewire\SuperAdmin\Schools\Manage as ManageSchools;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,6 +34,36 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/subjects', ManageSubjects::class)->name('subjects');
         Route::get('/teachers', ManageTeachers::class)->name('teachers');
         Route::get('/students', ManageStudents::class)->name('students');
+        Route::get('/attendance', MarkAttendance::class)->name('attendance');
+        Route::get('/settings', SchoolProfile::class)->name('settings');
+    });
+
+Route::middleware(['auth', 'verified', 'role:super_admin'])
+    ->prefix('super-admin')
+    ->name('super-admin.')
+    ->group(function () {
+        Route::get('/schools', ManageSchools::class)->name('schools');
+    });
+
+Route::middleware(['auth', 'verified', 'role:teacher'])
+    ->prefix('teacher')
+    ->name('teacher.')
+    ->group(function () {
+        Route::get('/attendance', MarkAttendance::class)->name('attendance');
+    });
+
+Route::middleware(['auth', 'verified', 'role:student'])
+    ->prefix('student')
+    ->name('student.')
+    ->group(function () {
+        Route::get('/attendance', MyAttendance::class)->name('attendance');
+    });
+
+Route::middleware(['auth', 'verified', 'role:parent'])
+    ->prefix('parent')
+    ->name('parent.')
+    ->group(function () {
+        Route::get('/attendance', MyAttendance::class)->name('attendance');
     });
 
 require __DIR__.'/auth.php';

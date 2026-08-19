@@ -42,7 +42,7 @@ class RolePermissionSeeder extends Seeder
             'school_admin' => [
                 'manage teachers', 'manage students', 'manage classes', 'manage subjects',
                 'manage fees', 'manage exams', 'manage cms', 'manage announcements',
-                'view timetable', 'send messages',
+                'view timetable', 'send messages', 'mark attendance',
             ],
             'teacher' => [
                 'mark attendance', 'manage grades', 'view timetable', 'send messages',

@@ -111,12 +111,134 @@ erag/laravel-pwa 2, Breeze (Blade auth scaffolding).
 - `app/Support/Navigation.php` (Students/Teachers/Classes/Subjects now link to real routes)
 - `README.md` (setup/run instructions), this file
 
-## Phase 3 — Operational Modules (NOT started)
+## Phase 3 — Operational Modules (IN PROGRESS)
 
-- Attendance (mobile bulk marking, reports, absence notifications)
-- Fees & Finance (fee structures, invoices, payment gateway integration)
-- Examinations & Grades (exam setup, grade entry, report cards, analytics)
-- Reporting (student/academic/attendance/financial/admin reports, exports)
+| Item | Status |
+|---|---|
+| Attendance schema (`attendances` table, one row per student/day) | ✅ Done |
+| Attendance marking UI (mobile-first chip buttons, "mark all" shortcuts) shared by Teacher (own class-teacher sections only) and School Admin (all sections in school) | ✅ Done |
+| Student/Parent "My Attendance" view (monthly summary + history, parent has a child switcher) | ✅ Done |
+| Routes + nav wired for school-admin/teacher/student/parent | ✅ Done |
+| Absence notifications (SMS/email/push) | ❌ Not started — deferred to Phase 4 (Communication) |
+| Attendance analytics/exports (CSV/PDF reports) | ❌ Not started |
+| Fees & Finance (fee structures, invoices, payment gateway integration) | ❌ Not started |
+| Examinations & Grades (exam setup, grade entry, report cards, analytics) | ❌ Not started |
+| Reporting (student/academic/attendance/financial/admin reports, exports) | ❌ Not started |
+
+### Notes / design choices (Attendance)
+
+- Attendance is **daily, per section**, not per subject/period — there's no
+  timetable module yet, so a single status per student per day is recorded
+  (`present`/`absent`/`late`/`half_day`/`leave`), unique on `(student_id, date)`.
+- "Class teacher" access: a Teacher can only mark attendance for sections
+  where `sections.teacher_id` is their own `teachers.id` row (homeroom
+  model already implied by the existing `Section::classTeacher()` relation).
+  School Admin can mark/view any section in their school. Both roles reuse
+  the same `App\Livewire\Attendance\Mark` component; it detects the role via
+  `auth()->user()->teacher` being present or not.
+- `App\Livewire\Attendance\MyAttendance` is reused for both Student (own
+  record only) and Parent (per-child switcher, guardian_student pivot).
+  `studentId` is re-validated against the caller's own/children IDs on every
+  render to prevent a tampered Livewire property from exposing another
+  student's attendance.
+- Added `mark attendance` permission to the `school_admin` role in
+  `RolePermissionSeeder` (previously only `teacher`/`super_admin` had it).
+- Section tenant scoping still has to go through `school_classes.school_id`
+  since `sections` has no direct `school_id` column (pre-existing schema
+  decision, unchanged).
+
+### Files added/changed this session (Phase 3 — Attendance)
+
+- `database/migrations/2024_01_04_000000_create_attendances_table.php`
+- `app/Models/Attendance.php`; added `attendances()` relation to `app/Models/Student.php` and `app/Models/Section.php`
+- `app/Livewire/Attendance/{Mark,MyAttendance}.php`
+- `resources/views/livewire/attendance/{mark,my-attendance}.blade.php`
+- `routes/web.php` (school-admin/teacher/student/parent attendance routes; new `teacher.*`, `student.*`, `parent.*` route groups)
+- `app/Support/Navigation.php` (Attendance nav items now point to real routes for school_admin/teacher/student/parent)
+- `database/seeders/RolePermissionSeeder.php` (`mark attendance` added to `school_admin`)
+
+## UI/UX Refresh & School Theming (this session)
+
+| Item | Status |
+|---|---|
+| Per-school theme colors (`primary_color`/`secondary_color`) + logo, applied app-wide via CSS variables | ✅ Done |
+| Super Admin → Schools CRUD (branding: logo upload, color pickers, contact info, status) | ✅ Done |
+| School Admin → School Profile settings (logo + colors + contact info; no slug/code/status — those stay Super-Admin-only) | ✅ Done |
+| Redesigned public landing page (`welcome.blade.php`) | ✅ Done |
+| Redesigned login/auth layout (gradient background, glass card, restyled shared Breeze input/button components) | ✅ Done |
+| Refreshed dashboard shell (brand-gradient sidebar/topbar accents, school logo, gradient welcome banner, per-metric icons, role-relevant "Quick links" section) | ✅ Done |
+| Attendance UI overhaul (gradient header, icon-coded status chips, live tally cards, circular attendance-rate ring on My Attendance) | ✅ Done |
+
+### Notes / design choices (Theming)
+
+- Theme is implemented as **CSS custom properties** (`--brand-primary`,
+  `--brand-secondary`), set inline on `<html style="...">` in
+  `layouts/dashboard.blade.php` from `auth()->user()->school`, with defaults
+  in `resources/css/app.css`. This means a school's colors take effect
+  immediately after saving, **without an `npm run build`/Tailwind rebuild**
+  — important since Tailwind utility classes are static at build time and
+  this app targets shared hosting.
+- `.btn-primary`, `.sidebar-link.active`, `.bottom-nav-link.active`, and the
+  new `.brand-gradient`/`.brand-text` utility classes in `app.css` consume
+  these variables; hover state uses `filter: brightness(0.92)` instead of a
+  second "dark" color to keep the color model to just two inputs.
+- The public welcome page and login screen intentionally use the **default**
+  indigo/sky brand (no school context pre-login); only the authenticated
+  dashboard shell is school-themed.
+- Logo uploads use Livewire's `WithFileUploads`, stored on the `public` disk
+  under `school-logos/` — requires `php artisan storage:link` (not yet run
+  in this sandbox).
+- Super Admin can edit `name`/`slug`/`code`/`status`/contact/branding for any
+  school; School Admin's own "School Profile" screen intentionally excludes
+  `slug`, `code`, and `status` (tenant identity/lifecycle stays Super-Admin
+  controlled), matching the request that theme/logo settings live in Super
+  Admin and School Admin only — not Teacher/Student/Parent.
+
+### Files added/changed this session (UI/UX Refresh & Theming)
+
+- `database/migrations/2024_01_05_000000_add_theme_fields_to_schools_table.php`
+- `app/Models/School.php` (`primary_color`, `secondary_color` fillable + `logoUrl()` accessor)
+- `app/Livewire/SuperAdmin/Schools/Manage.php` + `resources/views/livewire/super-admin/schools/manage.blade.php`
+- `app/Livewire/SchoolAdmin/Settings/Profile.php` + `resources/views/livewire/school-admin/settings/profile.blade.php`
+- `routes/web.php` (`super-admin.schools`, `school-admin.settings`)
+- `app/Support/Navigation.php` (Schools nav wired for super_admin; new "School Profile" nav item for school_admin only)
+- `resources/css/app.css` (CSS variable theme system, `.brand-gradient`/`.brand-text`/`.status-chip`/`.glass-card` utilities)
+- `resources/views/layouts/dashboard.blade.php` (brand vars injected on `<html>`, school logo in sidebar, brand-gradient avatar/active states)
+- `resources/views/layouts/guest.blade.php`, `resources/views/auth/login.blade.php` (redesigned auth screens)
+- `resources/views/components/{text-input,input-label,primary-button}.blade.php` (restyled shared Breeze components used across all auth screens)
+- `resources/views/welcome.blade.php` (replaced stock Laravel page with an SMS landing page)
+- `app/Livewire/Dashboard.php` + `resources/views/livewire/dashboard.blade.php` (gradient banner, per-metric icons, role-relevant quick links)
+- `resources/views/livewire/attendance/{mark,my-attendance}.blade.php` (icon-coded status chips, live tally, circular attendance-rate ring)
+
+### Bugfix pass (this session)
+
+Re-audited every screen built so far after a report that attendance marking
+and the school logo/branding screens "weren't working". Since this sandbox
+still cannot run `php`/`composer` (see environment note at top), this was a
+static code audit, not a browser test — findings:
+
+- **Real code bug, fixed**: `resources/views/livewire/attendance/mark.blade.php`
+  set each student's status via `wire:click="$set('status.{{ $id }}', '{{ $value }}')"`
+  — Livewire's `$set(...)` dot-path magic action for array properties relies
+  on the framework's property-change interception, which **Livewire 4**
+  (`composer.json` pins `^4.4`) reworked around PHP property hooks. This is
+  the one place in the app using that pattern (every other CRUD screen calls
+  plain component methods like `openEdit($id)`), so it's the most likely
+  cause of "marking attendance doesn't work." Fixed by adding an explicit
+  `Mark::setStatus(int $studentId, string $status)` method and calling
+  `wire:click="setStatus({{ $student->id }}, '{{ $value }}')"` instead —
+  version-agnostic and consistent with the rest of the codebase.
+- **No code bug found** in the School Admin "School Profile" logo upload or
+  the Super Admin "Schools" logo upload (`WithFileUploads`, validation, and
+  `$model->update()` all check out against the working Students/Teachers CRUD
+  pattern). The most likely cause of "logo update not working" is that
+  **`php artisan storage:link` has never been run** in whatever environment
+  this was tested in — without it, `Storage::disk('public')->url(...)` returns
+  a `/storage/...` URL that 404s even though the upload itself succeeded and
+  the DB `logo` column was updated. Also confirm `php artisan migrate` has
+  actually been run so the `attendances` table and the new `schools.primary_color`
+  /`secondary_color` columns exist — a missing table/column would surface as
+  "feature doesn't work" too. Both are listed in "Next steps" below.
 
 ## Phase 4 — Enhancement (NOT started)
 
@@ -147,6 +269,16 @@ erag/laravel-pwa 2, Breeze (Blade auth scaffolding).
    correctly.
 4. Phase 2 core CRUD (Classes/Sections/Subjects/Teachers/Students) is done —
    test it in the browser as School Admin (`admin@demoschool.test`).
-5. Start Phase 3: Attendance is the natural next module since it depends
-   directly on Students/Sections/Teachers, which now exist. Fees and
-   Examinations can follow in any order after that.
+5. Attendance (marking + student/parent views) is now built — after
+   migrating, assign a Teacher as `classTeacher` on a Section (via the
+   Sections tab under Classes) so `teacher@demoschool.test` has a section to
+   mark; then test `/school-admin/attendance`, `/teacher/attendance`,
+   `/student/attendance`, `/parent/attendance` in the browser.
+6. Run `php artisan storage:link` (needed for uploaded school logos to be
+   web-accessible), then test theming: log in as `superadmin@example.com` →
+   Schools → edit the demo school's logo/colors; log in as
+   `admin@demoschool.test` → School Profile → change colors and confirm the
+   sidebar/buttons/dashboard re-theme after reload.
+7. Next: Fees & Finance or Examinations & Grades (either order). Attendance
+   analytics/exports and absence notifications were deferred — revisit once
+   Communication (Phase 4) exists for the notification channel.
