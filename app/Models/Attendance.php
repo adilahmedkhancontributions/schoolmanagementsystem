@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class Attendance extends Model
 {
@@ -20,11 +22,12 @@ class Attendance extends Model
         'marked_by',
     ];
 
-    protected function casts(): array
+    protected function date(): Attribute
     {
-        return [
-            'date' => 'date',
-        ];
+        return Attribute::make(
+            get: fn (?string $value) => $value ? Carbon::parse($value) : null,
+            set: fn ($value) => $value ? Carbon::parse($value)->format('Y-m-d') : null,
+        );
     }
 
     public function school(): BelongsTo

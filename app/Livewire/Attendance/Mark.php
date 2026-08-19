@@ -72,7 +72,7 @@ class Mark extends Component
         $students = $this->availableSections()->findOrFail($this->sectionId)->students;
 
         $existing = Attendance::where('section_id', $this->sectionId)
-            ->where('date', $this->date)
+            ->whereDate('date', $this->date)
             ->get()
             ->keyBy('student_id');
 
@@ -105,16 +105,17 @@ class Mark extends Component
         $section = $this->availableSections()->findOrFail($this->sectionId);
 
         foreach ($this->status as $studentId => $status) {
-            Attendance::updateOrCreate(
-                ['student_id' => $studentId, 'date' => $this->date],
-                [
-                    'school_id' => $section->schoolClass->school_id,
-                    'section_id' => $section->id,
-                    'status' => $status,
-                    'remarks' => $this->remarks[$studentId] ?: null,
-                    'marked_by' => auth()->id(),
-                ]
-            );
+            $attendance = Attendance::where('student_id', $studentId)
+                ->whereDate('date', $this->date)
+                ->first() ?? new Attendance(['student_id' => $studentId, 'date' => $this->date]);
+
+            $attendance->fill([
+                'school_id' => $section->schoolClass->school_id,
+                'section_id' => $section->id,
+                'status' => $status,
+                'remarks' => $this->remarks[$studentId] ?: null,
+                'marked_by' => auth()->id(),
+            ])->save();
         }
 
         $this->saved = true;
