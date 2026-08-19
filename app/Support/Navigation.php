@@ -31,14 +31,16 @@ class Navigation
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'school-admin.attendance'],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => 'school-admin.fees.invoices'],
                 ['label' => 'Exams', 'icon' => 'fa-file-pen', 'route' => 'school-admin.exams'],
+                ['label' => 'Reports', 'icon' => 'fa-chart-pie', 'route' => 'school-admin.reports.attendance'],
                 ['label' => 'CMS', 'icon' => 'fa-newspaper', 'route' => null],
-                ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => null],
+                ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'school-admin.announcements'],
                 ['label' => 'School Profile', 'icon' => 'fa-palette', 'route' => 'school-admin.settings'],
             ],
             'teacher' => [
                 ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => null],
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'teacher.attendance'],
                 ['label' => 'Grades', 'icon' => 'fa-file-pen', 'route' => 'teacher.exams.grades'],
+                ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'teacher.announcements'],
                 ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => null],
             ],
             'student' => [
@@ -46,13 +48,14 @@ class Navigation
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'student.attendance'],
                 ['label' => 'Grades', 'icon' => 'fa-graduation-cap', 'route' => 'student.exams'],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => 'student.fees'],
-                ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => null],
+                ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'student.announcements'],
             ],
             'parent' => [
                 ['label' => 'My Children', 'icon' => 'fa-child-reaching', 'route' => null],
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'parent.attendance'],
                 ['label' => 'Performance', 'icon' => 'fa-graduation-cap', 'route' => 'parent.exams'],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => 'parent.fees'],
+                ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'parent.announcements'],
                 ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => null],
             ],
         ];

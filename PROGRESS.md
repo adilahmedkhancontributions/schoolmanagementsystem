@@ -129,8 +129,12 @@ erag/laravel-pwa 2, Breeze (Blade auth scaffolding).
 | Examinations & Grades: exam setup (School Admin creates exams per class, picks subjects + max/pass marks) | ✅ Done |
 | Examinations & Grades: grade entry (Teacher — own subjects only; School Admin — any subject) | ✅ Done |
 | Examinations & Grades: Student/Parent report card (per-exam subject breakdown, total %, letter grade, pass/fail) | ✅ Done |
-| Examinations & Grades: analytics (class averages, top scorers, trend charts) | ❌ Not started |
-| Reporting (student/academic/attendance/financial/admin reports, exports) | ❌ Not started |
+| Examinations & Grades: analytics (class averages, top scorers, per-subject breakdown, CSV export) | ✅ Done (folded into Reports, see below) |
+| Reporting: Attendance report (per-student present/absent/late/half-day/leave counts + rate, date range + class filter, CSV export) | ✅ Done |
+| Reporting: Exam report (student rankings, class average, pass rate, top scorer, per-subject average/high/low, CSV export) | ✅ Done |
+| Reporting: Fee collection report (billed/collected/outstanding/collection rate, per-class breakdown, overdue invoices list + CSV export) | ✅ Done |
+| Reporting: trend charts (attendance/fees over time) | ❌ Not started — no JS charting library installed yet; current reports use stat cards + tables only |
+| Reporting: Super Admin cross-school / global analytics | ❌ Not started |
 
 ### Notes / design choices (Attendance)
 
@@ -345,14 +349,87 @@ No changes were needed to these files this session.
 - `app/Support/Navigation.php` (Exams/Grades/Performance nav items now point to real routes for school_admin/teacher/student/parent)
 - `database/seeders/DemoDataSeeder.php` (demo `Exam` "Mid Term Exam" + one `ExamSubject` for Mathematics on the demo class)
 
+### Notes / design choices (Reports)
+
+- Three School-Admin-only report screens sharing one tab bar
+  (`livewire/school-admin/reports/_tabs.blade.php`) rather than one combined
+  component — keeps each component's `render()` query set focused, mirrors
+  how Fees already splits Structures/Invoices into separate components with
+  a cross-link button.
+- No charting library is installed (`package.json` has no chart dependency
+  and the architecture note at the top of this doc prioritizes shared-hosting/
+  minimal-resource-usage), so all three reports use stat cards + plain
+  tables instead of graphs. Revisit if/when a lightweight charting approach
+  is chosen.
+- CSV export is implemented as a plain Livewire component method returning
+  `response()->streamDownload(...)` (`wire:click="export"` triggers a normal
+  browser download) — no extra controller/route or export package needed.
+- Attendance report groups `Attendance` rows by `student_id` over a date
+  range (default: month-to-date) with an optional class filter, computing
+  present/absent/late/half_day/leave counts and a simple attendance rate
+  (`present / total * 100`).
+- Exam report picks one exam (defaults to the most recent) and computes,
+  per student, summed marks across all graded `exam_subjects` for that exam
+  plus overall pass/fail (a student "passes" only if every graded subject
+  individually clears its own `pass_marks`); the subject-breakdown table
+  reuses the same `ExamResult` collection grouped by subject instead of a
+  second query.
+- Fees report aggregates all of a school's `fee_invoices` by
+  `student->schoolClass->name` for the billed/paid/due-by-class table, and
+  separately lists invoices where `status != 'paid'` and `due_date` is in
+  the past as "Overdue" (its own CSV export, since that's the actionable
+  list an admin would chase up).
+
+### Files added/changed this session (Phase 3 — Reports)
+
+- `app/Livewire/SchoolAdmin/Reports/{Attendance,Exams,Fees}.php` + matching `resources/views/livewire/school-admin/reports/{attendance,exams,fees}.blade.php`
+- `resources/views/livewire/school-admin/reports/_tabs.blade.php` (shared tab bar)
+- `routes/web.php` (`school-admin.reports.attendance`, `school-admin.reports.exams`, `school-admin.reports.fees`)
+- `app/Support/Navigation.php` (new "Reports" nav item for school_admin)
+
 ## Phase 4 — Enhancement (NOT started)
 
-- Public CMS front page (hero/about/announcements/admissions/blog/gallery/contact)
-- Admin CMS (WYSIWYG, media library, SEO, scheduled publishing)
-- Communication (email/SMS/in-app/push, real-time chat, notices)
-- PWA polish (manifest, service worker, offline shell) — package installed,
-  not yet configured
-- Analytics integrations (Google Analytics/Mixpanel)
+| Item | Status |
+|---|---|
+| Communication: Announcements (School Admin CRUD — title/body/audience/optional class scope/immediate or scheduled publish; read-only feed for Teacher/Student/Parent, audience + class filtered) | ✅ Done |
+| Communication: email/SMS/push delivery of announcements | ❌ Not started — in-app feed only for now, no mail/SMS provider configured |
+| Communication: real-time chat / direct messaging (teacher↔parent) | ❌ Not started |
+| Public CMS front page (hero/about/announcements/admissions/blog/gallery/contact) | ❌ Not started |
+| Admin CMS (WYSIWYG, media library, SEO, scheduled publishing) | ❌ Not started |
+| PWA polish (manifest, service worker, offline shell) | ❌ Not started — package installed, not yet configured |
+| Analytics integrations (Google Analytics/Mixpanel) | ❌ Not started |
+
+### Notes / design choices (Announcements)
+
+- One `announcements` table: `audience` enum (`everyone`/`teachers`/`students`/`parents`)
+  plus an optional `school_class_id` to narrow further (e.g. "students" +
+  Grade 5 = only Grade 5 students/parents-of-Grade-5 see it, since the
+  visibility scope also matches `parents` against a class). `published_at`
+  is nullable and can be future-dated for scheduling, or left null for a
+  draft that never appears in any feed.
+- `Announcement::scopeVisibleTo($role, $classIds)` is the single source of
+  truth for "can this role see this announcement" — used by the shared
+  `App\Livewire\Announcements\Feed` component (Teacher/Student/Parent) so
+  the filtering logic isn't duplicated per role. Teachers are matched against
+  the classes of the sections they're `classTeacher` on; Students against
+  their own `school_class_id`; Parents against the union of all their
+  children's `school_class_id`s.
+- School Admin's management screen (`school-admin.announcements`) is the
+  only write surface — Teacher/Student/Parent get a read-only feed, matching
+  the request that CMS/communication authoring stays admin-side for now.
+- No email/SMS/push delivery yet (matches the top-level architecture
+  decision to defer third-party integrations) — an announcement only
+  appears in the in-app feed once its `published_at` has passed.
+
+### Files added/changed this session (Phase 4 — Announcements)
+
+- `database/migrations/2024_01_08_000000_create_announcements_table.php`
+- `app/Models/Announcement.php`; added `announcements()` to `app/Models/SchoolClass.php`
+- `app/Livewire/SchoolAdmin/Announcements/Manage.php` + `resources/views/livewire/school-admin/announcements/manage.blade.php`
+- `app/Livewire/Announcements/Feed.php` + `resources/views/livewire/announcements/feed.blade.php` (shared Teacher/Student/Parent)
+- `routes/web.php` (`school-admin.announcements`, `teacher.announcements`, `student.announcements`, `parent.announcements`)
+- `app/Support/Navigation.php` (Announcements nav items now point to real routes for school_admin/teacher/student/parent)
+- `database/seeders/DemoDataSeeder.php` (demo "Welcome to the new term" announcement, audience `everyone`)
 
 ## Phase 5 — Polish & Deployment (NOT started)
 
@@ -401,11 +478,26 @@ No changes were needed to these files this session.
    confirm it shows up at `/student/exams` (`student@demoschool.test`) and
    `/parent/exams` (`parent@demoschool.test`) with the correct percentage/
    grade/pass-fail chip.
-   Attendance analytics/exports and absence notifications were deferred —
-   revisit once Communication (Phase 4) exists for the notification channel.
-   A recurring/auto-generated invoice job (e.g. monthly tuition auto-billed)
-   was also deferred — currently a School Admin re-runs "Generate Invoices"
-   each cycle.
-9. Next: exam/attendance analytics (class averages, top scorers, trend
-   charts) and Reporting module, or move on to Phase 4 (CMS/Communication)
-   per priority.
+   Absence notifications were deferred — revisit once Communication
+   (Phase 4) exists for the notification channel. A recurring/auto-generated
+   invoice job (e.g. monthly tuition auto-billed) was also deferred —
+   currently a School Admin re-runs "Generate Invoices" each cycle.
+9. Reports (Attendance/Exams/Fees, all with CSV export) is now built as
+   `admin@demoschool.test` — test `/school-admin/reports/attendance` (date
+   range + class filter, then Export CSV), `/school-admin/reports/exams`
+   (pick the demo exam, check student ranking + subject breakdown), and
+   `/school-admin/reports/fees` (billed/collected/outstanding cards,
+   per-class table, overdue invoices list). No charting library is wired up
+   yet, so these are stat-card/table only — see Phase 3 table above.
+10. Announcements (Phase 4) is now built — after migrating/seeding, test as
+    `admin@demoschool.test`: `/school-admin/announcements` (edit the demo
+    "Welcome to the new term" notice, try creating one scoped to Grade 5 +
+    "students" audience, and one scheduled for a future date/time to confirm
+    it shows as "Scheduled" and doesn't appear in feeds yet). Then check
+    `/teacher/announcements`, `/student/announcements`, and
+    `/parent/announcements` all show the "everyone" one.
+11. Next: public CMS front page + admin CMS (WYSIWYG, media library, SEO,
+    scheduled publishing) is the largest remaining functional gap. Smaller
+    alternatives: real-time messaging (teacher↔parent), email/SMS delivery
+    of announcements, Super Admin cross-school analytics, or a charting
+    library for trend visualizations in Reports.

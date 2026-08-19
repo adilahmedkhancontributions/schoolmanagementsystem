@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Announcement;
 use App\Models\Exam;
 use App\Models\ExamSubject;
 use App\Models\FeeInvoice;
@@ -120,6 +121,16 @@ class DemoDataSeeder extends Seeder
         ExamSubject::firstOrCreate(
             ['exam_id' => $exam->id, 'subject_id' => $subject->id],
             ['max_marks' => 100, 'pass_marks' => 40]
+        );
+
+        Announcement::firstOrCreate(
+            ['school_id' => $school->id, 'title' => 'Welcome to the new term'],
+            [
+                'body' => 'We are excited to welcome everyone back for the new academic term. Please check your dashboard regularly for updates.',
+                'audience' => 'everyone',
+                'published_at' => now(),
+                'created_by' => $admin->id,
+            ]
         );
     }
 }
