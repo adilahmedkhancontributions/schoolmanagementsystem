@@ -126,7 +126,10 @@ erag/laravel-pwa 2, Breeze (Blade auth scaffolding).
 | Fees & Finance: manual payment recording (cash/bank/cheque/online/other) with running balance + payment history, partial payments supported | ✅ Done |
 | Fees & Finance: Student/Parent "My Fees" view (invoices, totals billed/paid/due, parent child switcher) | ✅ Done |
 | Fees & Finance: payment gateway integration (Stripe/Razorpay/PayPal online pay) | ❌ Not started — deferred until real credentials are available (per architecture note at top of this doc); payments are recorded manually by School Admin for now |
-| Examinations & Grades (exam setup, grade entry, report cards, analytics) | ❌ Not started |
+| Examinations & Grades: exam setup (School Admin creates exams per class, picks subjects + max/pass marks) | ✅ Done |
+| Examinations & Grades: grade entry (Teacher — own subjects only; School Admin — any subject) | ✅ Done |
+| Examinations & Grades: Student/Parent report card (per-exam subject breakdown, total %, letter grade, pass/fail) | ✅ Done |
+| Examinations & Grades: analytics (class averages, top scorers, trend charts) | ❌ Not started |
 | Reporting (student/academic/attendance/financial/admin reports, exports) | ❌ Not started |
 
 ### Notes / design choices (Attendance)
@@ -292,6 +295,56 @@ bugs found — all CRUD components consistently scope queries by
 magic actions), and validate uniqueness with `Rule::unique(...)->ignore(...)`.
 No changes were needed to these files this session.
 
+### Notes / design choices (Examinations & Grades)
+
+- Three tables: `exams` (name/term/dates, scoped to one `school_class_id` —
+  an exam is always for a specific class, unlike fee structures which can be
+  class-agnostic), `exam_subjects` (join of exam + subject with a per-subject
+  `max_marks`/`pass_marks`, since different subjects in the same exam can
+  have different totals), `exam_results` (one row per student per
+  exam-subject — `marks_obtained` nullable so "not yet graded" is
+  distinguishable from "scored zero", unique on `(exam_subject_id,
+  student_id)`).
+- No separate configurable grading-scale table — percentage-to-letter-grade
+  (A+/A/B+/B/C/D/F) is a fixed threshold table on `ExamResult::grade()`,
+  matching the "don't build for hypothetical requirements" guidance; revisit
+  if a school needs custom grade bands.
+- Exam setup is School-Admin-only (`school-admin.exams`): create the exam
+  against a class, then a second "Subjects" modal lists every subject that
+  belongs to that class so the admin can toggle which ones are examined and
+  set marks — unticking a subject deletes its `exam_subjects` row (cascades
+  to any entered results for that subject).
+- Grade entry (`App\Livewire\Exams\GradeEntry`) is shared by Teacher and
+  School Admin, same pattern as `Attendance\Mark`: a Teacher only sees exams/
+  subjects where `subjects.teacher_id` is their own `teachers.id`; School
+  Admin sees every exam/subject in the school. Picking an exam+subject loads
+  every student in that exam's class with a marks + remarks input per row,
+  saved in one submit via `updateOrCreate` per student (matches the
+  Attendance `Mark::save()` pattern, not the Fees `updateOrCreate`-with-
+  possible-cast-mismatch pattern — see the Attendance date-cast bugfix
+  earlier in this doc, which is why `ExamResult`/`ExamSubject` don't use
+  Eloquent date/decimal round-tripping tricks for their lookup keys).
+- Student/Parent "Grades" (`App\Livewire\Exams\ReportCard`) reuses the same
+  studentId-guarded pattern as `MyAttendance`/`MyFees` (own record only for
+  Student, per-child switcher for Parent): pick an exam (scoped to the
+  student's current class), see a subject-by-subject table plus totals
+  (marks obtained/max, percentage, overall letter grade) and a pass/fail
+  chip per subject computed from that subject's own `pass_marks`.
+- No analytics yet (class average, top scorers, grade distribution charts)
+  and no printable/exportable report card PDF — both deferred, tracked in
+  the Phase 3 table above.
+
+### Files added/changed this session (Phase 3 — Examinations & Grades)
+
+- `database/migrations/2024_01_07_00000{0,1,2}_create_exam{s,_subjects,_results}_table.php`
+- `app/Models/{Exam,ExamSubject,ExamResult}.php`; added `exams()` to `app/Models/SchoolClass.php`, `examSubjects()` to `app/Models/Subject.php`, `examResults()` to `app/Models/Student.php`
+- `app/Livewire/SchoolAdmin/Exams/Manage.php` + `resources/views/livewire/school-admin/exams/manage.blade.php` (exam CRUD + per-exam subject/marks setup modal)
+- `app/Livewire/Exams/GradeEntry.php` + `resources/views/livewire/exams/grade-entry.blade.php` (shared Teacher/School Admin marks entry)
+- `app/Livewire/Exams/ReportCard.php` + `resources/views/livewire/exams/report-card.blade.php` (shared Student/Parent report card)
+- `routes/web.php` (`school-admin.exams`, `school-admin.exams.grades`, `teacher.exams.grades`, `student.exams`, `parent.exams`)
+- `app/Support/Navigation.php` (Exams/Grades/Performance nav items now point to real routes for school_admin/teacher/student/parent)
+- `database/seeders/DemoDataSeeder.php` (demo `Exam` "Mid Term Exam" + one `ExamSubject` for Mathematics on the demo class)
+
 ## Phase 4 — Enhancement (NOT started)
 
 - Public CMS front page (hero/about/announcements/admissions/blog/gallery/contact)
@@ -339,9 +392,20 @@ No changes were needed to these files this session.
    move unpaid → partial → paid). Then check `/student/fees` as
    `student@demoschool.test` and `/parent/fees` as `parent@demoschool.test`
    (demo seed already includes one unpaid Monthly Tuition Fee invoice).
-8. Next: Examinations & Grades (exam setup, grade entry, report cards).
+8. Examinations & Grades (exam setup, grade entry, report cards) is now
+   built — after migrating/seeding, test as `admin@demoschool.test`:
+   `/school-admin/exams` (edit the demo "Mid Term Exam", click the list-check
+   icon to confirm Mathematics is ticked with max/pass marks, or add another
+   subject). Then `/school-admin/exams/grades` (and `/teacher/exams/grades`
+   as `teacher@demoschool.test`) to enter a mark for the demo student, and
+   confirm it shows up at `/student/exams` (`student@demoschool.test`) and
+   `/parent/exams` (`parent@demoschool.test`) with the correct percentage/
+   grade/pass-fail chip.
    Attendance analytics/exports and absence notifications were deferred —
    revisit once Communication (Phase 4) exists for the notification channel.
    A recurring/auto-generated invoice job (e.g. monthly tuition auto-billed)
    was also deferred — currently a School Admin re-runs "Generate Invoices"
    each cycle.
+9. Next: exam/attendance analytics (class averages, top scorers, trend
+   charts) and Reporting module, or move on to Phase 4 (CMS/Communication)
+   per priority.

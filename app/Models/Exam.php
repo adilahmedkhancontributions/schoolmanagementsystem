@@ -7,23 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Subject extends Model
+class Exam extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'school_id',
         'school_class_id',
-        'teacher_id',
         'name',
-        'code',
-        'is_elective',
+        'term',
+        'start_date',
+        'end_date',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_elective' => 'boolean',
+            'start_date' => 'date',
+            'end_date' => 'date',
         ];
     }
 
@@ -35,11 +36,6 @@ class Subject extends Model
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
-    }
-
-    public function teacher(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class);
     }
 
     public function examSubjects(): HasMany

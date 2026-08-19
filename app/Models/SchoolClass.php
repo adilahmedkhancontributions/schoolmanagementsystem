@@ -43,4 +43,9 @@ class SchoolClass extends Model
     {
         return $this->hasMany(FeeStructure::class);
     }
+
+    public function exams(): HasMany
+    {
+        return $this->hasMany(Exam::class);
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Exam;
+use App\Models\ExamSubject;
 use App\Models\FeeInvoice;
 use App\Models\FeeStructure;
 use App\Models\Guardian;
@@ -67,7 +69,7 @@ class DemoDataSeeder extends Seeder
             ['teacher_id' => $teacher->id, 'capacity' => 40]
         );
 
-        Subject::firstOrCreate(
+        $subject = Subject::firstOrCreate(
             ['school_id' => $school->id, 'school_class_id' => $class->id, 'code' => 'MATH5'],
             ['name' => 'Mathematics', 'teacher_id' => $teacher->id]
         );
@@ -108,6 +110,16 @@ class DemoDataSeeder extends Seeder
         FeeInvoice::firstOrCreate(
             ['school_id' => $school->id, 'student_id' => $student->id, 'fee_structure_id' => $tuitionFee->id, 'title' => 'Monthly Tuition Fee'],
             ['amount' => $tuitionFee->amount, 'due_date' => now()->addDays(15), 'status' => 'unpaid']
+        );
+
+        $exam = Exam::firstOrCreate(
+            ['school_id' => $school->id, 'school_class_id' => $class->id, 'name' => 'Mid Term Exam'],
+            ['term' => 'Term 1', 'start_date' => now()->subDays(5), 'end_date' => now()->subDays(1)]
+        );
+
+        ExamSubject::firstOrCreate(
+            ['exam_id' => $exam->id, 'subject_id' => $subject->id],
+            ['max_marks' => 100, 'pass_marks' => 40]
         );
     }
 }
