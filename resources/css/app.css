@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .card {
+        @apply bg-white rounded-xl shadow-card border border-slate-100 transition-shadow duration-200;
+    }
+
+    .card-hoverable {
+        @apply hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200;
+    }
+
+    .stat-card {
+        @apply card card-hoverable p-5 flex items-start justify-between;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 min-h-touch text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 min-h-touch text-sm font-semibold text-slate-700 border border-slate-300 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors;
+    }
+
+    .sidebar-link {
+        @apply flex items-center gap-3 rounded-lg px-3 py-2.5 min-h-touch text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-colors;
+    }
+
+    .sidebar-link.active {
+        @apply bg-white/10 text-white;
+    }
+
+    .bottom-nav-link {
+        @apply flex flex-col items-center justify-center gap-1 min-h-touch flex-1 text-xs font-medium text-slate-500;
+    }
+
+    .bottom-nav-link.active {
+        @apply text-indigo-600;
+    }
+}
