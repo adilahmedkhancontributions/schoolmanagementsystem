@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\FeeInvoice;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Student;
@@ -49,11 +50,16 @@ class Dashboard extends Component
 
     private function schoolAdminMetrics(User $user): array
     {
+        $due = FeeInvoice::where('school_id', $user->school_id)
+            ->selectRaw('SUM(amount - paid_amount) as due')
+            ->value('due') ?? 0;
+
         return [
             'Students' => Student::where('school_id', $user->school_id)->count(),
             'Teachers' => Teacher::where('school_id', $user->school_id)->count(),
             'Classes' => SchoolClass::where('school_id', $user->school_id)->count(),
             'Active Staff' => User::where('school_id', $user->school_id)->where('status', 'active')->count(),
+            'Fees Due' => $user->school->currency.' '.number_format($due, 2),
         ];
     }
 
@@ -71,10 +77,15 @@ class Dashboard extends Component
     {
         $student = $user->student;
 
+        $due = $student
+            ? $student->feeInvoices()->selectRaw('SUM(amount - paid_amount) as due')->value('due') ?? 0
+            : 0;
+
         return [
             'Class' => $student?->schoolClass?->name ?? '—',
             'Section' => $student?->section?->name ?? '—',
             'Admission No.' => $student?->admission_number ?? '—',
+            'Fees Due' => $user->school->currency.' '.number_format($due, 2),
         ];
     }
 

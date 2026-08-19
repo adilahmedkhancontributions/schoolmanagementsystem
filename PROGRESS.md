@@ -121,7 +121,11 @@ erag/laravel-pwa 2, Breeze (Blade auth scaffolding).
 | Routes + nav wired for school-admin/teacher/student/parent | ✅ Done |
 | Absence notifications (SMS/email/push) | ❌ Not started — deferred to Phase 4 (Communication) |
 | Attendance analytics/exports (CSV/PDF reports) | ❌ Not started |
-| Fees & Finance (fee structures, invoices, payment gateway integration) | ❌ Not started |
+| Fees & Finance: fee structures CRUD (School Admin) | ✅ Done |
+| Fees & Finance: invoice generation (single student / whole class / whole school, from a structure template or custom) | ✅ Done |
+| Fees & Finance: manual payment recording (cash/bank/cheque/online/other) with running balance + payment history, partial payments supported | ✅ Done |
+| Fees & Finance: Student/Parent "My Fees" view (invoices, totals billed/paid/due, parent child switcher) | ✅ Done |
+| Fees & Finance: payment gateway integration (Stripe/Razorpay/PayPal online pay) | ❌ Not started — deferred until real credentials are available (per architecture note at top of this doc); payments are recorded manually by School Admin for now |
 | Examinations & Grades (exam setup, grade entry, report cards, analytics) | ❌ Not started |
 | Reporting (student/academic/attendance/financial/admin reports, exports) | ❌ Not started |
 
@@ -240,6 +244,54 @@ static code audit, not a browser test — findings:
   /`secondary_color` columns exist — a missing table/column would surface as
   "feature doesn't work" too. Both are listed in "Next steps" below.
 
+### Notes / design choices (Fees & Finance)
+
+- Three tables: `fee_structures` (reusable templates — name, amount, optional
+  class scope, frequency label for display only, no auto-recurring billing
+  job yet), `fee_invoices` (one row billed to one student, `amount` +
+  `paid_amount` + derived `status`), `fee_payments` (append-only ledger of
+  each payment against an invoice, so partial payments and payment history
+  are both supported without any destructive updates to past payments).
+- `FeeInvoice::refreshStatus()` recomputes `unpaid`/`partial`/`paid` from
+  `paid_amount` vs `amount` using `bcadd`/`bccomp` (avoids float rounding on
+  money); called after every payment is recorded.
+- "Generate Invoices" is a single form that can target one student, a whole
+  class, or (leaving both blank) every student in the school — it can start
+  from a fee structure template (prefills title/amount/class) or be fully
+  custom. There's no recurring/auto-generation job yet — admin re-runs it
+  each billing cycle, consistent with "no cron/queue infra assumed yet".
+- No payment gateway wired (Stripe/Razorpay/PayPal) — matches the top-level
+  architecture decision to defer third-party integrations until real
+  credentials exist. School Admin records payments manually (cash/bank
+  transfer/cheque/online/other) after collecting them out-of-band.
+- Student/Parent "My Fees" reuses the same studentId-guarded pattern as
+  `MyAttendance` (own record only for Student, per-child switcher for
+  Parent) — no payment action for Student/Parent yet, view-only.
+- Added `Fees Due` (outstanding balance) to the School Admin and Student
+  dashboard metric cards.
+
+### Files added/changed this session (Phase 3 — Fees & Finance)
+
+- `database/migrations/2024_01_06_00000{0,1,2}_create_fee_{structures,invoices,payments}_table.php`
+- `app/Models/{FeeStructure,FeeInvoice,FeePayment}.php`; added `feeInvoices()` to `app/Models/Student.php`, `feeStructures()` to `app/Models/SchoolClass.php`
+- `app/Livewire/SchoolAdmin/Fees/{Structures,Invoices}.php` + matching `resources/views/livewire/school-admin/fees/{structures,invoices}.blade.php`
+- `app/Livewire/Fees/MyFees.php` + `resources/views/livewire/fees/my-fees.blade.php` (shared by Student and Parent)
+- `routes/web.php` (`school-admin.fees.structures`, `school-admin.fees.invoices`, `student.fees`, `parent.fees`)
+- `app/Support/Navigation.php` (Fees nav wired for school_admin/student/parent)
+- `app/Livewire/Dashboard.php`, `resources/views/livewire/dashboard.blade.php` (`Fees Due` metric)
+- `database/seeders/DemoDataSeeder.php` (demo `FeeStructure` + one unpaid `FeeInvoice` for the demo student)
+
+### Bugfix / audit pass (this session)
+
+Re-read every previously built Livewire component (Classes/Sections,
+Subjects, Teachers, Students, Attendance Mark/MyAttendance, Super Admin
+Schools, School Admin Settings/Profile) end-to-end while building Fees to
+check for issues similar to the earlier `$set(...)` attendance bug. No new
+bugs found — all CRUD components consistently scope queries by
+`school_id`, use plain component methods for `wire:click` (no Livewire
+magic actions), and validate uniqueness with `Rule::unique(...)->ignore(...)`.
+No changes were needed to these files this session.
+
 ## Phase 4 — Enhancement (NOT started)
 
 - Public CMS front page (hero/about/announcements/admissions/blog/gallery/contact)
@@ -279,6 +331,17 @@ static code audit, not a browser test — findings:
    Schools → edit the demo school's logo/colors; log in as
    `admin@demoschool.test` → School Profile → change colors and confirm the
    sidebar/buttons/dashboard re-theme after reload.
-7. Next: Fees & Finance or Examinations & Grades (either order). Attendance
-   analytics/exports and absence notifications were deferred — revisit once
-   Communication (Phase 4) exists for the notification channel.
+7. Fees & Finance (structures, invoice generation, manual payment recording,
+   Student/Parent "My Fees") is now built — after migrating/seeding, test as
+   `admin@demoschool.test`: `/school-admin/fees/structures` (edit/add a fee
+   structure) and `/school-admin/fees/invoices` (Generate Invoices, then
+   click the $ icon on a row to record a payment and watch the status chip
+   move unpaid → partial → paid). Then check `/student/fees` as
+   `student@demoschool.test` and `/parent/fees` as `parent@demoschool.test`
+   (demo seed already includes one unpaid Monthly Tuition Fee invoice).
+8. Next: Examinations & Grades (exam setup, grade entry, report cards).
+   Attendance analytics/exports and absence notifications were deferred —
+   revisit once Communication (Phase 4) exists for the notification channel.
+   A recurring/auto-generated invoice job (e.g. monthly tuition auto-billed)
+   was also deferred — currently a School Admin re-runs "Generate Invoices"
+   each cycle.

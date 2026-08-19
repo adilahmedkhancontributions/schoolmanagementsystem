@@ -5,7 +5,7 @@
             'Teachers' => 'fa-chalkboard-user', 'Students' => 'fa-user-graduate', 'Classes' => 'fa-layer-group',
             'Active Staff' => 'fa-id-badge', 'My Sections' => 'fa-layer-group', 'My Subjects' => 'fa-book',
             'Class' => 'fa-layer-group', 'Section' => 'fa-diagram-project', 'Admission No.' => 'fa-id-card',
-            'My Children' => 'fa-child-reaching',
+            'My Children' => 'fa-child-reaching', 'Fees Due' => 'fa-file-invoice-dollar',
         ];
     @endphp
 

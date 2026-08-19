@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\FeeInvoice;
+use App\Models\FeeStructure;
 use App\Models\Guardian;
 use App\Models\School;
 use App\Models\SchoolClass;
@@ -97,5 +99,15 @@ class DemoDataSeeder extends Seeder
         $guardian->students()->syncWithoutDetaching([
             $student->id => ['relationship' => 'father', 'is_primary' => true],
         ]);
+
+        $tuitionFee = FeeStructure::firstOrCreate(
+            ['school_id' => $school->id, 'school_class_id' => $class->id, 'name' => 'Monthly Tuition Fee'],
+            ['amount' => 100, 'frequency' => 'monthly']
+        );
+
+        FeeInvoice::firstOrCreate(
+            ['school_id' => $school->id, 'student_id' => $student->id, 'fee_structure_id' => $tuitionFee->id, 'title' => 'Monthly Tuition Fee'],
+            ['amount' => $tuitionFee->amount, 'due_date' => now()->addDays(15), 'status' => 'unpaid']
+        );
     }
 }

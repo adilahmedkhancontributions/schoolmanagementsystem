@@ -4,7 +4,10 @@ use App\Http\Controllers\ProfileController;
 use App\Livewire\Attendance\Mark as MarkAttendance;
 use App\Livewire\Attendance\MyAttendance;
 use App\Livewire\Dashboard;
+use App\Livewire\Fees\MyFees;
 use App\Livewire\SchoolAdmin\Classes\Manage as ManageClasses;
+use App\Livewire\SchoolAdmin\Fees\Invoices as ManageFeeInvoices;
+use App\Livewire\SchoolAdmin\Fees\Structures as ManageFeeStructures;
 use App\Livewire\SchoolAdmin\Settings\Profile as SchoolProfile;
 use App\Livewire\SchoolAdmin\Students\Manage as ManageStudents;
 use App\Livewire\SchoolAdmin\Subjects\Manage as ManageSubjects;
@@ -36,6 +39,8 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/students', ManageStudents::class)->name('students');
         Route::get('/attendance', MarkAttendance::class)->name('attendance');
         Route::get('/settings', SchoolProfile::class)->name('settings');
+        Route::get('/fees/structures', ManageFeeStructures::class)->name('fees.structures');
+        Route::get('/fees/invoices', ManageFeeInvoices::class)->name('fees.invoices');
     });
 
 Route::middleware(['auth', 'verified', 'role:super_admin'])
@@ -57,6 +62,7 @@ Route::middleware(['auth', 'verified', 'role:student'])
     ->name('student.')
     ->group(function () {
         Route::get('/attendance', MyAttendance::class)->name('attendance');
+        Route::get('/fees', MyFees::class)->name('fees');
     });
 
 Route::middleware(['auth', 'verified', 'role:parent'])
@@ -64,6 +70,7 @@ Route::middleware(['auth', 'verified', 'role:parent'])
     ->name('parent.')
     ->group(function () {
         Route::get('/attendance', MyAttendance::class)->name('attendance');
+        Route::get('/fees', MyFees::class)->name('fees');
     });
 
 require __DIR__.'/auth.php';
