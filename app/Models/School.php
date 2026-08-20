@@ -62,6 +62,11 @@ class School extends Model
         return $this->hasMany(ContactMessage::class);
     }
 
+    public function timetableSlots(): HasMany
+    {
+        return $this->hasMany(TimetableSlot::class);
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

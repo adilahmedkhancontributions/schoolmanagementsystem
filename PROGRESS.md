@@ -598,6 +598,55 @@ No changes were needed to these files this session.
 - `app/Support/Navigation.php` (Messages nav items wired for teacher/parent, previously "coming soon")
 - `database/seeders/DemoDataSeeder.php` (demo conversation + two messages between the demo teacher and parent about the demo student)
 
+## Phase 2/3 — Timetable Module (this session)
+
+| Item | Status |
+|---|---|
+| Time slots (periods) CRUD, School Admin | ✅ Done |
+| Weekly timetable grid builder per class/section, School Admin | ✅ Done |
+| Teacher "My Timetable" (own periods across every class/section they teach) | ✅ Done |
+| Student "My Timetable" (own section's weekly schedule) | ✅ Done |
+| Nav placeholders (previously "coming soon" for Teacher/Student, missing entirely for School Admin) wired up | ✅ Done |
+
+### Notes / design choices (Timetable)
+
+- Two tables: `timetable_slots` (school-wide reusable periods — name + start/end time + sort order, e.g.
+  "Period 1, 08:00–08:45", set up once per school) and `timetable_entries` (one row per
+  section + slot + day-of-week, holding `subject_id` + `teacher_id`; unique on
+  `(section_id, timetable_slot_id, day_of_week)` so a section can't have two subjects in the same period on
+  the same day). `day_of_week` is `1`–`6` (Monday–Saturday) — matches the typical school week already
+  implied elsewhere in the app (no Sunday classes assumed); revisit if a school needs a different week
+  shape.
+- **Grid builder UX**: School Admin picks a class → section, then sees a slots-×-days grid where each cell
+  is a plain `<select>` of that class's subjects, saved instantly on change via
+  `wire:change="assign(slotId, day, $event.target.value)"` (no separate "Save" button/batch submit — matches
+  the "avoid Livewire magic actions" lesson learned earlier in this project, using an explicit method call
+  like `Attendance\Mark::setStatus()` rather than `$set(...)`). Selecting a subject auto-fills that entry's
+  `teacher_id` from `Subject::teacher_id`; clearing a cell (back to "—") deletes the entry.
+- **Tenant isolation**: every query in `SchoolAdmin\Timetable\Manage` goes through `availableClasses()`/
+  `availableSections()` helpers scoped by `where('school_id', ...)` /
+  `whereHas('schoolClass', fn ($q) => $q->where('school_id', ...))` — the same defensive pattern already
+  used in `Attendance\Mark::availableSections()` — so a tampered `sectionId`/`schoolClassId` Livewire
+  property can't be used to read or write another school's timetable.
+- `App\Livewire\Timetable\MyTimetable` is one shared read-only component for Teacher and Student (same
+  "detect role via `hasRole()`" pattern as `Attendance\Mark`/`Exams\GradeEntry`): Teacher sees every entry
+  where `teacher_id` matches their own `teachers.id` (across all classes/sections they teach), Student sees
+  every entry for their own `section_id`. Mobile renders one card per day; desktop renders the same
+  slots-×-days grid as the builder (read-only, no selects).
+- No admin UI for reordering days/handling half-day schedules/exceptions (holidays, substitutions) — out of
+  scope for a first pass; the existing Announcements module already covers one-off notices like "no school
+  Friday".
+
+### Files added/changed this session (Timetable)
+
+- `database/migrations/2024_01_11_00000{0,1}_create_timetable_{slots,entries}_table.php`
+- `app/Models/{TimetableSlot,TimetableEntry}.php`; added `timetableSlots()` to `app/Models/School.php`, `timetableEntries()` to `app/Models/Section.php` and `app/Models/Teacher.php`
+- `app/Livewire/SchoolAdmin/Timetable/{Slots,Manage}.php` + matching `resources/views/livewire/school-admin/timetable/{slots,manage}.blade.php` + `_tabs.blade.php`
+- `app/Livewire/Timetable/MyTimetable.php` + `resources/views/livewire/timetable/my-timetable.blade.php` (shared Teacher/Student)
+- `routes/web.php` (`school-admin.timetable.manage`, `school-admin.timetable.slots`, `teacher.timetable`, `student.timetable`)
+- `app/Support/Navigation.php` (Timetable nav item added for school_admin; wired up for teacher/student, previously "coming soon")
+- `database/seeders/DemoDataSeeder.php` (two demo time slots + two demo timetable entries for the demo section)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)

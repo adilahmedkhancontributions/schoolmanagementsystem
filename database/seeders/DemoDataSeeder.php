@@ -19,6 +19,8 @@ use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\TimetableEntry;
+use App\Models\TimetableSlot;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -197,6 +199,26 @@ class DemoDataSeeder extends Seeder
         Message::firstOrCreate(
             ['conversation_id' => $conversation->id, 'sender_id' => $parentUser->id, 'body' => "Thank you for the update, that's great to hear!"],
             ['created_at' => now()->subHour(), 'read_at' => now()->subHour()]
+        );
+
+        $period1 = TimetableSlot::firstOrCreate(
+            ['school_id' => $school->id, 'name' => 'Period 1'],
+            ['start_time' => '08:00', 'end_time' => '08:45', 'sort_order' => 1]
+        );
+
+        $period2 = TimetableSlot::firstOrCreate(
+            ['school_id' => $school->id, 'name' => 'Period 2'],
+            ['start_time' => '08:45', 'end_time' => '09:30', 'sort_order' => 2]
+        );
+
+        TimetableEntry::firstOrCreate(
+            ['section_id' => $section->id, 'timetable_slot_id' => $period1->id, 'day_of_week' => 1],
+            ['school_id' => $school->id, 'subject_id' => $subject->id, 'teacher_id' => $teacher->id]
+        );
+
+        TimetableEntry::firstOrCreate(
+            ['section_id' => $section->id, 'timetable_slot_id' => $period2->id, 'day_of_week' => 3],
+            ['school_id' => $school->id, 'subject_id' => $subject->id, 'teacher_id' => $teacher->id]
         );
     }
 }

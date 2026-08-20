@@ -52,4 +52,9 @@ class Teacher extends Model
     {
         return $this->hasMany(Conversation::class);
     }
+
+    public function timetableEntries(): HasMany
+    {
+        return $this->hasMany(TimetableEntry::class);
+    }
 }
