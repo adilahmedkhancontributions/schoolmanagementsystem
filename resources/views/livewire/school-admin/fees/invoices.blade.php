@@ -41,7 +41,51 @@
         </select>
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($invoices as $invoice)
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-slate-800 truncate">{{ $invoice->student->user->name }}</p>
+                        <p class="text-xs text-slate-500 truncate">{{ $invoice->title }} &middot; {{ $invoice->student->schoolClass?->name ?? '—' }}</p>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openPayment({{ $invoice->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Record payment">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </button>
+                        <button type="button" wire:click="deleteInvoice({{ $invoice->id }})" wire:confirm="Delete this invoice and its payment history?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mt-3">
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <div>
+                            <dt class="text-slate-400 inline">Amount:</dt>
+                            <dd class="text-slate-700 font-medium inline ml-1">{{ $currency }} {{ number_format($invoice->amount, 2) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-400 inline">Balance:</dt>
+                            <dd class="text-slate-700 font-medium inline ml-1">{{ $currency }} {{ number_format($invoice->balance(), 2) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-400 inline">Due:</dt>
+                            <dd class="text-slate-700 font-medium inline ml-1">{{ $invoice->due_date?->format('M d, Y') ?? '—' }}</dd>
+                        </div>
+                    </dl>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap {{ $statusColors[$invoice->status] }}">
+                        {{ ucfirst($invoice->status) }}
+                    </span>
+                </div>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No invoices yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">

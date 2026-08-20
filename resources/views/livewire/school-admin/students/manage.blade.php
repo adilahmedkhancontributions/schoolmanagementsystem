@@ -43,7 +43,47 @@
         @endif
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($students as $student)
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="h-10 w-10 shrink-0 rounded-full brand-gradient text-white flex items-center justify-center text-sm font-semibold">
+                            {{ strtoupper(substr($student->user->name, 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-medium text-slate-800 truncate">{{ $student->user->name }}</p>
+                            <p class="text-xs text-slate-500 truncate">{{ $student->user->email }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" wire:click="delete({{ $student->id }})" wire:confirm="Remove this student and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <dt class="text-slate-400">Admission No.</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ $student->admission_number }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-400">Class / Section</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ $student->schoolClass?->name ?? '—' }}{{ $student->section ? ' / '.$student->section->name : '' }}</dd>
+                    </div>
+                </dl>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No students yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">

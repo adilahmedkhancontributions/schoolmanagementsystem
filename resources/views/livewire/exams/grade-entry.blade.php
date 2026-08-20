@@ -39,7 +39,7 @@
         @endif
 
         @if ($students->isNotEmpty())
-            <form wire:submit="save" class="space-y-3 pb-24 lg:pb-0">
+            <form wire:submit="save" class="space-y-3 pb-32 lg:pb-0">
                 <div class="card divide-y divide-slate-100 overflow-hidden">
                     @foreach ($students as $student)
                         <div class="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -74,7 +74,7 @@
                     </button>
                 </div>
 
-                <div class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 p-3">
+                <div class="lg:hidden fixed bottom-16 inset-x-0 z-20 bg-white border-t border-slate-200 p-3">
                     <button type="submit" class="btn-primary w-full justify-center">
                         <i class="fa-solid fa-floppy-disk"></i> Save Grades
                     </button>

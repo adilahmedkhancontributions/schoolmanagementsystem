@@ -14,7 +14,42 @@
         </div>
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($structures as $structure)
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-slate-800 truncate">{{ $structure->name }}</p>
+                        <p class="text-xs text-slate-500">{{ $structure->schoolClass?->name ?? 'All classes' }}</p>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openEdit({{ $structure->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" wire:click="delete({{ $structure->id }})" wire:confirm="Delete this fee structure?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <dt class="text-slate-400">Amount</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ auth()->user()->school->currency }} {{ number_format($structure->amount, 2) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-400">Frequency</dt>
+                        <dd class="text-slate-700 font-medium capitalize mt-0.5">{{ str_replace('_', ' ', $structure->frequency) }}</dd>
+                    </div>
+                </dl>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No fee structures yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">

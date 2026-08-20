@@ -18,7 +18,44 @@
         </button>
     </div>
 
-    <div class="card overflow-hidden">
+    @php
+        $statusBadge = function ($announcement) {
+            if ($announcement->isPublished()) {
+                return ['label' => 'Published', 'class' => 'bg-emerald-50 text-emerald-700'];
+            }
+            if ($announcement->published_at) {
+                return ['label' => 'Scheduled: '.$announcement->published_at->format('d M Y, h:i A'), 'class' => 'bg-amber-50 text-amber-700'];
+            }
+            return ['label' => 'Draft', 'class' => 'bg-slate-100 text-slate-500'];
+        };
+    @endphp
+
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($announcements as $announcement)
+            @php($badge = $statusBadge($announcement))
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <p class="font-medium text-slate-800 min-w-0 truncate">{{ $announcement->title }}</p>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openEdit({{ $announcement->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" wire:click="delete({{ $announcement->id }})" wire:confirm="Delete this announcement?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">{{ $audienceLabels[$announcement->audience] }} &middot; {{ $announcement->schoolClass?->name ?? 'All classes' }}</p>
+                <span class="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full {{ $badge['class'] }}">{{ $badge['label'] }}</span>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No announcements yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">
@@ -76,7 +113,7 @@
                 @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <x-floating-select label="Audience" name="audience" wire:model="audience">
                     @foreach ($audienceLabels as $value => $label)
                         <option value="{{ $value }}">{{ $label }}</option>

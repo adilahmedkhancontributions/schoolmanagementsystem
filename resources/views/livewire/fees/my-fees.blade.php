@@ -62,7 +62,38 @@
             </div>
         </div>
 
-        <div class="card overflow-hidden">
+        <!-- Mobile card list -->
+        <div class="sm:hidden space-y-3">
+            @forelse ($invoices as $invoice)
+                <div class="card p-4">
+                    <div class="flex items-start justify-between gap-3">
+                        <p class="font-medium text-slate-800">{{ $invoice->title }}</p>
+                        <span class="text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap {{ $statusColors[$invoice->status] }}">
+                            {{ ucfirst($invoice->status) }}
+                        </span>
+                    </div>
+                    <dl class="mt-3 grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                            <dt class="text-slate-400">Amount</dt>
+                            <dd class="text-slate-700 font-medium mt-0.5">{{ $currency }} {{ number_format($invoice->amount, 2) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-400">Balance</dt>
+                            <dd class="text-slate-700 font-medium mt-0.5">{{ $currency }} {{ number_format($invoice->balance(), 2) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-slate-400">Due</dt>
+                            <dd class="text-slate-700 font-medium mt-0.5">{{ $invoice->due_date?->format('M d, Y') ?? '—' }}</dd>
+                        </div>
+                    </dl>
+                </div>
+            @empty
+                <div class="card p-8 text-center text-slate-500 text-sm">No invoices yet.</div>
+            @endforelse
+        </div>
+
+        <!-- Desktop table -->
+        <div class="hidden sm:block card overflow-hidden">
             <table class="w-full text-sm">
                 <thead class="bg-slate-50">
                     <tr class="text-left text-xs uppercase tracking-wide text-slate-500">

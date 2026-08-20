@@ -27,7 +27,47 @@
                class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($teachers as $teacher)
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="h-10 w-10 shrink-0 rounded-full brand-gradient text-white flex items-center justify-center text-sm font-semibold">
+                            {{ strtoupper(substr($teacher->user->name, 0, 1)) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-medium text-slate-800 truncate">{{ $teacher->user->name }}</p>
+                            <p class="text-xs text-slate-500 truncate">{{ $teacher->user->email }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openEdit({{ $teacher->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" wire:click="delete({{ $teacher->id }})" wire:confirm="Remove this teacher and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <dt class="text-slate-400">Employee ID</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ $teacher->employee_id }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-400">Type</dt>
+                        <dd class="text-slate-700 font-medium capitalize mt-0.5">{{ str_replace('_', ' ', $teacher->employment_type) }}</dd>
+                    </div>
+                </dl>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No teachers yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">

@@ -14,7 +14,47 @@
                class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($subjects as $subject)
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <p class="font-medium text-slate-800 truncate">{{ $subject->name }}</p>
+                            @if ($subject->is_elective)
+                                <span class="inline-flex items-center rounded-full bg-sky-50 text-sky-700 px-2 py-0.5 text-xs font-medium shrink-0">Elective</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-slate-500">{{ $subject->code ?? '—' }}</p>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openEdit({{ $subject->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" wire:click="delete({{ $subject->id }})" wire:confirm="Delete this subject?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <dt class="text-slate-400">Class</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ $subject->schoolClass?->name ?? 'All classes' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-400">Teacher</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ $subject->teacher?->user?->name ?? '—' }}</dd>
+                    </div>
+                </dl>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No subjects yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">

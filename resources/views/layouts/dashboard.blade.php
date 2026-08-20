@@ -3,9 +3,14 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" style="--brand-primary: {{ $school?->primary_color ?? '#4f46e5' }}; --brand-secondary: {{ $school?->secondary_color ?? '#0ea5e9' }};">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="theme-color" content="{{ $school?->primary_color ?? '#4f46e5' }}">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="{{ $school?->name ?? config('app.name', 'SMS') }}">
+        <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+        @PwaHead
 
         <title>{{ $title ?? config('app.name', 'School Management System') }}</title>
 

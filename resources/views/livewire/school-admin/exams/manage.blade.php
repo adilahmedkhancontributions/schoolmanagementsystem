@@ -14,7 +14,43 @@
         </div>
     </div>
 
-    <div class="card overflow-hidden">
+    <!-- Mobile card list -->
+    <div class="sm:hidden space-y-3">
+        @forelse ($exams as $exam)
+            <div class="card p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="font-medium text-slate-800 truncate">{{ $exam->name }}</p>
+                        <p class="text-xs text-slate-500">{{ $exam->schoolClass->name }}{{ $exam->term ? ' · '.$exam->term : '' }}</p>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openSubjects({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Subjects & marks">
+                            <i class="fa-solid fa-list-check"></i>
+                        </button>
+                        <button type="button" wire:click="openEdit({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" wire:click="delete({{ $exam->id }})" wire:confirm="Delete this exam and all its results?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-slate-500">
+                    <i class="fa-solid fa-calendar-days mr-1"></i>
+                    @if ($exam->start_date)
+                        {{ $exam->start_date->format('d M') }} – {{ $exam->end_date?->format('d M Y') }}
+                    @else
+                        No dates set
+                    @endif
+                </p>
+            </div>
+        @empty
+            <div class="card p-8 text-center text-slate-500 text-sm">No exams yet.</div>
+        @endforelse
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs uppercase tracking-wide text-slate-500">
@@ -69,7 +105,7 @@
                 @endforeach
             </x-floating-select>
             <x-floating-input label="Term (optional)" name="term" wire:model="term" />
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <x-floating-input label="Start date" name="startDate" type="date" wire:model="startDate" />
                 <x-floating-input label="End date" name="endDate" type="date" wire:model="endDate" />
             </div>

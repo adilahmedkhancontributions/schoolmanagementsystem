@@ -431,6 +431,58 @@ No changes were needed to these files this session.
 - `app/Support/Navigation.php` (Announcements nav items now point to real routes for school_admin/teacher/student/parent)
 - `database/seeders/DemoDataSeeder.php` (demo "Welcome to the new term" announcement, audience `everyone`)
 
+## Mobile Responsiveness & PWA Pass (this session)
+
+| Item | Status |
+|---|---|
+| Fixed mobile "Save" bar hidden behind bottom nav on Attendance Mark / Grade Entry | ✅ Done |
+| Mobile card layouts for admin data tables (Students, Teachers, Subjects, Fee Structures, Fee Invoices, Exams) | ✅ Done |
+| Mobile card layout for Student/Parent "My Fees" and "Grades" (report card) | ✅ Done |
+| Stacked (not side-by-side) form fields on narrow modals (Exam dates, Announcement audience/class) | ✅ Done |
+| Prevented iOS Safari auto-zoom on input focus (forced 16px font-size on form fields under 640px) | ✅ Done |
+| PWA manifest (`config/pwa.php`, `public/manifest.json`) re-branded from placeholder "Laravel PWA" to real app name/colors, `display` changed `fullscreen` → `standalone` | ✅ Done |
+| `@PwaHead` directive + apple-mobile-web-app meta tags wired into `layouts/dashboard.blade.php`, `layouts/guest.blade.php`, `welcome.blade.php` | ✅ Done |
+
+### Notes / design choices (Mobile & PWA)
+
+- **Real bug found and fixed**: `attendance/mark.blade.php` and `exams/grade-entry.blade.php` each had a
+  mobile-only "Save" button bar pinned `fixed bottom-0`, but the dashboard shell's bottom navigation
+  (`layouts/dashboard.blade.php`) is *also* `fixed bottom-0` and renders later in the DOM, so it painted on
+  top and made the Save button unreachable on every phone. Fixed by moving the save bar to `bottom-16`
+  (clears the nav) and bumping the form's bottom padding from `pb-24` to `pb-32` so the last row of content
+  isn't covered by the two stacked bars.
+- Every admin CRUD table (Students, Teachers, Subjects, Fee Structures, Fee Invoices, Exams,
+  Announcements) now renders a `sm:hidden` stacked-card list on phones and keeps the original `hidden
+  sm:block` table unchanged above the `sm` breakpoint — no data or actions were removed, just re-laid-out.
+  Screens that were already card-based (Classes/Sections, Super Admin Schools, Announcements feed) or
+  already used `overflow-x-auto` (Reports) were left as-is.
+- Student/Parent "My Fees" and "Grades" (report card) got the same card/table split since these are the
+  screens ordinary students and parents hit most on a phone.
+- Global fix in `resources/css/app.css`: all `input`/`select`/`textarea` get `font-size: 16px` under a
+  `max-width: 640px` media query — anything smaller than 16px makes iOS Safari auto-zoom the whole page on
+  focus, which was happening on every form field (`text-sm` = 14px) across the app.
+- PWA: `config/pwa.php` and `public/manifest.json` were still the package's placeholder values ("Laravel
+  PWA" / "LPT" / purple `#6777ef` / `display: fullscreen`). Re-branded both to the app name/description and
+  the default brand indigo (`#4f46e5`), and switched `display` to `standalone` (fullscreen hides the status
+  bar entirely, which is unexpected for a business app). Added the package's `@PwaHead` Blade directive plus
+  `apple-mobile-web-app-capable`/`apple-touch-icon` meta tags to all three top-level layouts (dashboard,
+  guest/auth, public welcome page) so "Add to Home Screen" works with correct icon/name on iOS and Android.
+  `public/sw.js`/`public/offline.html` (install-time cache + offline fallback page) were already functional
+  and unchanged. Since `composer install`/`php artisan erag:update-manifest` can't run in this sandbox,
+  `public/manifest.json` was hand-edited to match the new `config/pwa.php` values directly.
+- Did not touch: `public/offline.html` (generic red Laravel-branded offline page, cosmetic only, low
+  priority), Reports screens (already used `overflow-x-auto` and fit acceptably on mobile since they're
+  admin-only analytics, not something "every user" hits on a phone).
+
+### Files added/changed this session (Mobile & PWA)
+
+- `resources/views/livewire/attendance/mark.blade.php`, `resources/views/livewire/exams/grade-entry.blade.php` (fixed bottom-nav overlap bug)
+- `resources/views/livewire/school-admin/{students,teachers,subjects}/manage.blade.php`, `resources/views/livewire/school-admin/fees/{structures,invoices}.blade.php`, `resources/views/livewire/school-admin/exams/manage.blade.php`, `resources/views/livewire/school-admin/announcements/manage.blade.php` (mobile card layouts)
+- `resources/views/livewire/fees/my-fees.blade.php`, `resources/views/livewire/exams/report-card.blade.php` (mobile card layouts)
+- `resources/css/app.css` (16px mobile input font-size fix)
+- `config/pwa.php`, `public/manifest.json` (re-branded, `standalone` display)
+- `resources/views/layouts/dashboard.blade.php`, `resources/views/layouts/guest.blade.php`, `resources/views/welcome.blade.php` (`@PwaHead`, apple meta tags, `viewport-fit=cover`)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)

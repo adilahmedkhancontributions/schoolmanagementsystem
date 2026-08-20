@@ -62,7 +62,52 @@
                 </div>
             </div>
 
-            <div class="card overflow-hidden">
+            @php
+                $resultBadge = function ($result) {
+                    if ($result->isPass() === null) {
+                        return ['label' => 'Pending', 'class' => 'bg-slate-100 text-slate-500'];
+                    }
+                    return $result->isPass()
+                        ? ['label' => 'Pass', 'class' => 'bg-emerald-50 text-emerald-700']
+                        : ['label' => 'Fail', 'class' => 'bg-rose-50 text-rose-700'];
+                };
+            @endphp
+
+            <!-- Mobile card list -->
+            <div class="sm:hidden space-y-3">
+                @forelse ($results as $result)
+                    @php($badge = $resultBadge($result))
+                    <div class="card p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <p class="font-medium text-slate-800">{{ $result->examSubject->subject->name }}</p>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap {{ $badge['class'] }}">{{ $badge['label'] }}</span>
+                        </div>
+                        <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <dt class="text-slate-400">Marks</dt>
+                                <dd class="text-slate-700 font-medium mt-0.5">
+                                    {{ $result->marks_obtained !== null ? number_format($result->marks_obtained, 2) : '—' }} / {{ number_format($result->examSubject->max_marks, 2) }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-slate-400">Grade</dt>
+                                <dd class="text-slate-700 font-medium mt-0.5">{{ $result->grade() ?? '—' }}</dd>
+                            </div>
+                            @if ($result->remarks)
+                                <div class="col-span-2">
+                                    <dt class="text-slate-400">Remarks</dt>
+                                    <dd class="text-slate-700 mt-0.5">{{ $result->remarks }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+                    </div>
+                @empty
+                    <div class="card p-8 text-center text-slate-500 text-sm">No subjects set up for this exam yet.</div>
+                @endforelse
+            </div>
+
+            <!-- Desktop table -->
+            <div class="hidden sm:block card overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-slate-50">
                         <tr class="text-left text-xs uppercase tracking-wide text-slate-500">
