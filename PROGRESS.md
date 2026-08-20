@@ -693,6 +693,57 @@ No changes were needed to these files this session.
 - `resources/views/livewire/school-admin/timetable/_tabs.blade.php` (added "Change Requests" tab)
 - `routes/web.php` (`school-admin.timetable.requests`; `teacher.timetable` now points at `AllTimetables` instead of `MyTimetable`)
 
+## Phase 2/3 — Timetable Change Notifications (this session)
+
+| Item | Status |
+|---|---|
+| Teacher request modal now pre-fills every field with the period's current subject/class-section/period/day so the teacher edits from the current state instead of blank "no change" dropdowns | ✅ Done |
+| Submitting a request now diffs the selected values against the current entry (only actually-changed fields are stored as `requested_*`; unchanged fields stay null) | ✅ Done |
+| In-app + email notification sent to the affected students, their guardians, and the teacher whenever a timetable entry is rescheduled or removed — whether done directly by School Admin in the grid, or via an approved teacher change request | ✅ Done |
+| Teacher is also notified by email/in-app if their change request is rejected (with the admin's note, if any) | ✅ Done |
+| Notification bell in the dashboard topbar (all roles) showing unread count, a dropdown of the latest 10 notifications, mark-one-read and mark-all-read | ✅ Done |
+
+### Notes / design choices (Timetable Change Notifications)
+
+- Added Laravel's standard `notifications` table migration (none existed before) and used the built-in
+  `Notifiable` trait already present on `App\Models\User` — no new dependency required.
+- `App\Notifications\TimetableChanged` is intentionally generic (`title`, `message`, `changedBy` — no
+  timetable-specific fields) so both call sites (direct grid edits and approved change requests, which have
+  different "what changed" shapes) can compose their own clear wording rather than forcing one rigid
+  before/after schema. Implements `via() = ['mail', 'database']`; `toArray()` feeds the dashboard bell,
+  `toMail()` feeds the email (currently logged to `storage/logs/laravel.log` since `MAIL_MAILER=log` by
+  default — set real SMTP credentials in `.env` to actually deliver email).
+- `App\Support\TimetableNotifier` centralizes recipient resolution: `recipientsFor(Section, ?Teacher)` collects
+  the teacher's user + every student in that section + all of those students' guardians (via
+  `Student::guardians()`), de-duplicated by user id, and dispatches through `Notification::send()`. A
+  `notifyUser()` helper sends to a single user directly (used for "you're no longer teaching this" /
+  "your request was rejected" messages that shouldn't go to the whole class).
+- **Hook points**:
+  - `SchoolAdmin\Timetable\Manage::assign()` — loads the existing entry (if any) for that section+slot+day
+    before saving; on removal (subject set back to "—") notifies before deleting; on reassignment (subject
+    swapped in the same cell) notifies the section + new subject's teacher with "changed from X to Y", and
+    additionally notifies the old teacher individually if the teacher also changed.
+  - `SchoolAdmin\Timetable\Requests::approve()` — snapshots the old section/subject/schedule before applying
+    the merged requested fields, then notifies the old section's recipients with a before/after summary; if
+    the requested section differs from the original, the new section's students/guardians also get a
+    separate "new period added" notice. `reject()` notifies just the requesting teacher.
+- No queue is configured, so notifications (including the mail send) happen synchronously in the request
+  cycle — acceptable at this project's scale (matches the "no WebSockets/queue infra, shared-hosting
+  friendly" decision already made for messaging polling); revisit with `ShouldQueue` if a school's roster
+  grows large enough that sending to a full class becomes slow.
+
+### Files added/changed this session (Timetable Change Notifications)
+
+- `database/migrations/2024_01_13_000000_create_notifications_table.php`
+- `app/Notifications/TimetableChanged.php`
+- `app/Support/TimetableNotifier.php`
+- `app/Livewire/Timetable/AllTimetables.php` (prefill + diff-based request submission)
+- `resources/views/livewire/timetable/all-timetables.blade.php` (current-schedule summary block in the modal, dropdowns pre-selected to current values)
+- `app/Livewire/SchoolAdmin/Timetable/Manage.php` (`assign()` now notifies on reassignment/removal)
+- `app/Livewire/SchoolAdmin/Timetable/Requests.php` (`approve()`/`reject()` now notify)
+- `app/Livewire/NotificationBell.php` + `resources/views/livewire/notification-bell.blade.php`
+- `resources/views/layouts/dashboard.blade.php` (bell embedded in the topbar for every role)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)

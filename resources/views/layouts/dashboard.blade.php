@@ -106,6 +106,8 @@
                         @endisset
                     </div>
 
+                    @livewire('notification-bell')
+
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open" @click.outside="open = false" class="flex items-center gap-2 min-h-touch rounded-lg px-2 hover:bg-slate-100">
                             <div class="h-9 w-9 rounded-full brand-gradient text-white flex items-center justify-center font-semibold">

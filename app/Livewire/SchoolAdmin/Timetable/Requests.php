@@ -2,8 +2,12 @@
 
 namespace App\Livewire\SchoolAdmin\Timetable;
 
+use App\Models\Section;
+use App\Models\Subject;
 use App\Models\TimetableChangeRequest;
 use App\Models\TimetableEntry;
+use App\Models\TimetableSlot;
+use App\Support\TimetableNotifier;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -51,7 +55,9 @@ class Requests extends Component
             return;
         }
 
-        $entry = $request->timetable_entry_id ? TimetableEntry::find($request->timetable_entry_id) : null;
+        $entry = $request->timetable_entry_id
+            ? TimetableEntry::with(['section.schoolClass', 'subject', 'slot', 'teacher.user'])->find($request->timetable_entry_id)
+            : null;
 
         if (! $entry) {
             $this->addError('reviewingId', 'The original timetable entry no longer exists.');
@@ -76,6 +82,11 @@ class Requests extends Component
             return;
         }
 
+        $oldSection = $entry->section;
+        $oldSubject = $entry->subject;
+        $oldScheduleLabel = TimetableNotifier::describe($entry->slot, $entry->day_of_week);
+        $teacher = $entry->teacher;
+
         $entry->update([
             'section_id' => $newSectionId,
             'subject_id' => $newSubjectId,
@@ -88,6 +99,30 @@ class Requests extends Component
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);
+
+        $newSection = Section::with('schoolClass')->find($newSectionId);
+        $newSubject = Subject::find($newSubjectId);
+        $newSlot = TimetableSlot::find($newSlotId);
+        $newScheduleLabel = TimetableNotifier::describe($newSlot, $newDay);
+        $changedBy = $teacher?->user?->name.' (approved change request)';
+
+        TimetableNotifier::notify(
+            $oldSection,
+            $teacher,
+            'Timetable updated',
+            TimetableNotifier::sectionLabel($oldSection).' — '.$oldSubject->name.' schedule updated. Previously: '.$oldScheduleLabel.'. Now: '.$newSubject->name.' on '.$newScheduleLabel.' ('.TimetableNotifier::sectionLabel($newSection).').',
+            $changedBy
+        );
+
+        if ($newSection->id !== $oldSection->id) {
+            TimetableNotifier::notify(
+                $newSection,
+                $teacher,
+                'New period added to timetable',
+                TimetableNotifier::sectionLabel($newSection).' — '.$newSubject->name.' scheduled on '.$newScheduleLabel.'.',
+                $changedBy
+            );
+        }
 
         session()->flash('message', 'Request approved and timetable updated.');
     }
@@ -107,7 +142,7 @@ class Requests extends Component
     public function reject(): void
     {
         $schoolId = auth()->user()->school_id;
-        $request = TimetableChangeRequest::where('school_id', $schoolId)->findOrFail($this->reviewingId);
+        $request = TimetableChangeRequest::where('school_id', $schoolId)->with('teacher.user')->findOrFail($this->reviewingId);
 
         if ($request->status !== TimetableChangeRequest::STATUS_PENDING) {
             $this->cancelReject();
@@ -121,6 +156,13 @@ class Requests extends Component
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);
+
+        TimetableNotifier::notifyUser(
+            $request->teacher?->user,
+            'Timetable change request rejected',
+            'Your timetable change request has been rejected.'.($this->adminNote ? ' Reason: '.$this->adminNote : ''),
+            auth()->user()->name.' (School Admin)'
+        );
 
         $this->cancelReject();
         session()->flash('message', 'Request rejected.');

@@ -154,13 +154,21 @@
                     </button>
                 </div>
 
-                <p class="text-xs text-slate-500 mb-4">Leave a field blank if you don't want to change it. Your request will be sent to the school admin for approval.</p>
+                @php($currentEntry = $myEntries->firstWhere('id', $requestEntryId))
+                @if ($currentEntry)
+                    <div class="rounded-lg bg-slate-50 p-3 text-xs text-slate-600 mb-4">
+                        <p class="font-medium text-slate-700 mb-1">Current schedule</p>
+                        <p>{{ $currentEntry->subject->name }} &middot; {{ $currentEntry->section->schoolClass->name }} - {{ $currentEntry->section->name }}</p>
+                        <p>{{ \App\Models\TimetableEntry::DAYS[$currentEntry->day_of_week] }}, {{ $currentEntry->slot->name }} ({{ $currentEntry->slot->start_time->format('h:i A') }}–{{ $currentEntry->slot->end_time->format('h:i A') }})</p>
+                    </div>
+                @endif
+
+                <p class="text-xs text-slate-500 mb-4">Fields below are pre-filled with the current schedule &mdash; only change what you want updated. Your request will be sent to the school admin for approval.</p>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">New Subject</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Subject</label>
                         <select wire:model="requestedSubjectId" class="w-full min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-                            <option value="">No change</option>
                             @foreach ($allSubjects as $subject)
                                 <option value="{{ $subject->id }}">{{ $subject->name }}</option>
                             @endforeach
@@ -168,9 +176,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">New Class / Section</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Class / Section</label>
                         <select wire:model="requestedSectionId" class="w-full min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-                            <option value="">No change</option>
                             @foreach ($allSections as $section)
                                 <option value="{{ $section->id }}">{{ $section->schoolClass->name }} - {{ $section->name }}</option>
                             @endforeach
@@ -178,9 +185,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">New Period / Time</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Period / Time</label>
                         <select wire:model="requestedSlotId" class="w-full min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-                            <option value="">No change</option>
                             @foreach ($periods as $period)
                                 <option value="{{ $period->id }}">{{ $period->name }} ({{ $period->start_time->format('h:i A') }}–{{ $period->end_time->format('h:i A') }})</option>
                             @endforeach
@@ -188,9 +194,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">New Day</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Day</label>
                         <select wire:model="requestedDay" class="w-full min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-                            <option value="">No change</option>
                             @foreach (\App\Models\TimetableEntry::DAYS as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
                             @endforeach

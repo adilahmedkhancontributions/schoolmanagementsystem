@@ -99,10 +99,10 @@ class AllTimetables extends Component
         $entry = TimetableEntry::where('teacher_id', $teacher?->id)->findOrFail($entryId);
 
         $this->requestEntryId = $entry->id;
-        $this->requestedSubjectId = '';
-        $this->requestedSectionId = '';
-        $this->requestedSlotId = '';
-        $this->requestedDay = '';
+        $this->requestedSubjectId = (string) $entry->subject_id;
+        $this->requestedSectionId = (string) $entry->section_id;
+        $this->requestedSlotId = (string) $entry->timetable_slot_id;
+        $this->requestedDay = (string) $entry->day_of_week;
         $this->reason = '';
         $this->showRequestModal = true;
     }
@@ -122,13 +122,13 @@ class AllTimetables extends Component
         $teacher = auth()->user()->teacher;
         $entry = TimetableEntry::where('teacher_id', $teacher?->id)->findOrFail($this->requestEntryId);
 
-        if (
-            $this->requestedSubjectId === '' &&
-            $this->requestedSectionId === '' &&
-            $this->requestedSlotId === '' &&
-            $this->requestedDay === ''
-        ) {
-            $this->addError('reason', 'Please specify at least one change you are requesting.');
+        $requestedSectionId = ((int) $this->requestedSectionId !== $entry->section_id) ? (int) $this->requestedSectionId : null;
+        $requestedSubjectId = ((int) $this->requestedSubjectId !== $entry->subject_id) ? (int) $this->requestedSubjectId : null;
+        $requestedSlotId = ((int) $this->requestedSlotId !== $entry->timetable_slot_id) ? (int) $this->requestedSlotId : null;
+        $requestedDay = ((int) $this->requestedDay !== $entry->day_of_week) ? (int) $this->requestedDay : null;
+
+        if (! $requestedSectionId && ! $requestedSubjectId && ! $requestedSlotId && ! $requestedDay) {
+            $this->addError('reason', 'Please change at least one field before submitting.');
 
             return;
         }
@@ -141,10 +141,10 @@ class AllTimetables extends Component
             'current_subject_id' => $entry->subject_id,
             'current_timetable_slot_id' => $entry->timetable_slot_id,
             'current_day_of_week' => $entry->day_of_week,
-            'requested_section_id' => $this->requestedSectionId ?: null,
-            'requested_subject_id' => $this->requestedSubjectId ?: null,
-            'requested_timetable_slot_id' => $this->requestedSlotId ?: null,
-            'requested_day_of_week' => $this->requestedDay ?: null,
+            'requested_section_id' => $requestedSectionId,
+            'requested_subject_id' => $requestedSubjectId,
+            'requested_timetable_slot_id' => $requestedSlotId,
+            'requested_day_of_week' => $requestedDay,
             'reason' => $this->reason,
             'status' => TimetableChangeRequest::STATUS_PENDING,
         ]);
