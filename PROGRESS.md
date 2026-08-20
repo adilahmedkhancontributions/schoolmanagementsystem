@@ -551,6 +551,53 @@ No changes were needed to these files this session.
 - `app/Support/Navigation.php` (CMS nav item wired to `school-admin.cms.pages`)
 - `database/seeders/DemoDataSeeder.php` (demo About/Admissions pages, one blog post, one contact message, hero copy on the demo school)
 
+## Phase 4 — Teacher ↔ Parent Messaging (this session)
+
+| Item | Status |
+|---|---|
+| Direct messaging between Teacher and Parent, scoped per-child | ✅ Done |
+| Mobile-first inbox (list ↔ thread toggle on phones, split-pane on desktop) | ✅ Done |
+| Contact list derived from real class-teacher/subject-teacher relationships (no free-for-all messaging) | ✅ Done |
+| Unread badges + mark-as-read on open | ✅ Done |
+| Near-real-time updates via polling (no websockets/broadcasting infra) | ✅ Done |
+
+### Notes / design choices (Messaging)
+
+- Two tables: `conversations` (`teacher_id` + `guardian_id` + `student_id`, unique together — a thread is
+  always "this teacher and this parent, about this specific child", not a generic DM) and `messages`
+  (`conversation_id`, `sender_id` as a `users.id` so either party's message row looks the same, `body`,
+  `read_at`). Scoping every thread to a student is deliberate: a parent with two children in different
+  classes gets separate threads per teacher-per-child, so context is never ambiguous.
+- **Who can message whom is derived, not free-form**: a Teacher's contact list is every guardian of a
+  student where that teacher is the student's section `classTeacher` OR teaches a subject in the student's
+  class; a Parent's contact list is the class teacher and every subject teacher for each of their own
+  children. Both directions are computed by the same `App\Livewire\Messaging\Inbox::contactOptions()` and
+  re-validated server-side in `startConversation()` (the dropdown `value` a user submits is checked against
+  their own freshly-computed contact list before a conversation row is created) — a parent can't start a
+  thread with an arbitrary teacher outside their child's class, and vice versa.
+- **No websockets/Laravel Echo/Reverb** — matches the existing shared-hosting/minimal-footprint architecture
+  decision. The open thread panel uses `wire:poll.5s` to re-fetch messages, which is a plain HTTP
+  request Livewire already knows how to diff/morph; adequate for a school's message volume without adding
+  a persistent connection requirement shared hosting often can't support.
+- `Inbox` is one shared Livewire component for both roles (same pattern as `Attendance\Mark` and
+  `Fees\MyFees`) — `auth()->user()->hasRole('teacher')` switches labels/contact-list direction; every
+  query is scoped through `conversationsQuery()` (`where('teacher_id', $user->teacher?->id ?? 0)` /
+  `where('guardian_id', ...)`), including `send()`'s ownership check, so a tampered `conversationId` can't
+  be used to read or post into someone else's thread.
+- Mobile UX: a `$showList` boolean (independent of `$conversationId`) toggles between the conversation list
+  and the open thread on narrow screens (`hidden`/`flex` swap at the `lg` breakpoint) with a back button in
+  the thread header — kept separate from `$conversationId` specifically so tapping "back" doesn't fight
+  with the "auto-select the first conversation" logic in `render()`.
+
+### Files added/changed this session (Messaging)
+
+- `database/migrations/2024_01_10_00000{0,1}_create_{conversations,messages}_table.php`
+- `app/Models/{Conversation,Message}.php`; added `conversations()` to `app/Models/Teacher.php` and `app/Models/Guardian.php`
+- `app/Livewire/Messaging/Inbox.php` + `resources/views/livewire/messaging/inbox.blade.php` (shared Teacher/Parent)
+- `routes/web.php` (`teacher.messages`, `parent.messages`)
+- `app/Support/Navigation.php` (Messages nav items wired for teacher/parent, previously "coming soon")
+- `database/seeders/DemoDataSeeder.php` (demo conversation + two messages between the demo teacher and parent about the demo student)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)

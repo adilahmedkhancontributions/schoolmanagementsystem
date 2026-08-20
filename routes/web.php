@@ -9,6 +9,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Exams\GradeEntry;
 use App\Livewire\Exams\ReportCard;
 use App\Livewire\Fees\MyFees;
+use App\Livewire\Messaging\Inbox as MessagingInbox;
 use App\Livewire\SchoolAdmin\Announcements\Manage as ManageAnnouncements;
 use App\Livewire\SchoolAdmin\Classes\Manage as ManageClasses;
 use App\Livewire\SchoolAdmin\Cms\Gallery as ManageGallery;
@@ -80,6 +81,7 @@ Route::middleware(['auth', 'verified', 'role:teacher'])
         Route::get('/attendance', MarkAttendance::class)->name('attendance');
         Route::get('/exams/grades', GradeEntry::class)->name('exams.grades');
         Route::get('/announcements', AnnouncementsFeed::class)->name('announcements');
+        Route::get('/messages', MessagingInbox::class)->name('messages');
     });
 
 Route::middleware(['auth', 'verified', 'role:student'])
@@ -100,6 +102,7 @@ Route::middleware(['auth', 'verified', 'role:parent'])
         Route::get('/fees', MyFees::class)->name('fees');
         Route::get('/exams', ReportCard::class)->name('exams');
         Route::get('/announcements', AnnouncementsFeed::class)->name('announcements');
+        Route::get('/messages', MessagingInbox::class)->name('messages');
     });
 
 Route::prefix('s/{school:slug}')

@@ -6,11 +6,13 @@ use App\Models\Announcement;
 use App\Models\CmsPage;
 use App\Models\CmsPost;
 use App\Models\ContactMessage;
+use App\Models\Conversation;
 use App\Models\Exam;
 use App\Models\ExamSubject;
 use App\Models\FeeInvoice;
 use App\Models\FeeStructure;
 use App\Models\Guardian;
+use App\Models\Message;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Section;
@@ -180,6 +182,21 @@ class DemoDataSeeder extends Seeder
                 'message' => 'Hi, I would like to know more about the admissions process for Grade 1. Thank you!',
                 'is_read' => false,
             ]
+        );
+
+        $conversation = Conversation::firstOrCreate(
+            ['teacher_id' => $teacher->id, 'guardian_id' => $guardian->id, 'student_id' => $student->id],
+            ['school_id' => $school->id, 'last_message_at' => now()]
+        );
+
+        Message::firstOrCreate(
+            ['conversation_id' => $conversation->id, 'sender_id' => $teacherUser->id, 'body' => 'Hello! Just wanted to let you know your child is doing great in Mathematics this term.'],
+            ['created_at' => now()->subHours(2)]
+        );
+
+        Message::firstOrCreate(
+            ['conversation_id' => $conversation->id, 'sender_id' => $parentUser->id, 'body' => "Thank you for the update, that's great to hear!"],
+            ['created_at' => now()->subHour(), 'read_at' => now()->subHour()]
         );
     }
 }

@@ -41,7 +41,7 @@ class Navigation
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'teacher.attendance'],
                 ['label' => 'Grades', 'icon' => 'fa-file-pen', 'route' => 'teacher.exams.grades'],
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'teacher.announcements'],
-                ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => null],
+                ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => 'teacher.messages'],
             ],
             'student' => [
                 ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => null],
@@ -56,7 +56,7 @@ class Navigation
                 ['label' => 'Performance', 'icon' => 'fa-graduation-cap', 'route' => 'parent.exams'],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => 'parent.fees'],
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'parent.announcements'],
-                ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => null],
+                ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => 'parent.messages'],
             ],
         ];
 
