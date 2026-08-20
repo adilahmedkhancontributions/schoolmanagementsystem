@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Announcement;
+use App\Models\CmsPage;
+use App\Models\CmsPost;
+use App\Models\ContactMessage;
 use App\Models\Exam;
 use App\Models\ExamSubject;
 use App\Models\FeeInvoice;
@@ -41,6 +44,8 @@ class DemoDataSeeder extends Seeder
                 'currency' => 'USD',
                 'academic_year' => now()->year.'-'.(now()->year + 1),
                 'status' => 'active',
+                'hero_headline' => 'A place where every student thrives',
+                'hero_subheadline' => 'Quality education, caring teachers, and a vibrant community.',
             ]
         );
 
@@ -130,6 +135,50 @@ class DemoDataSeeder extends Seeder
                 'audience' => 'everyone',
                 'published_at' => now(),
                 'created_by' => $admin->id,
+            ]
+        );
+
+        CmsPage::firstOrCreate(
+            ['school_id' => $school->id, 'slug' => 'about'],
+            [
+                'title' => 'About Us',
+                'content' => '<p>Demo Public School has been serving our community for over 20 years, providing a nurturing environment where students grow academically, socially and emotionally.</p><p>Our dedicated teachers and staff are committed to helping every child reach their full potential.</p>',
+                'meta_description' => 'Learn about Demo Public School, our mission and our community.',
+                'status' => 'published',
+                'published_at' => now(),
+            ]
+        );
+
+        CmsPage::firstOrCreate(
+            ['school_id' => $school->id, 'slug' => 'admissions'],
+            [
+                'title' => 'Admissions',
+                'content' => '<p>We welcome new students throughout the academic year, subject to availability.</p><ul><li>Complete the enquiry form on our contact page</li><li>Schedule a campus visit</li><li>Submit required documents</li></ul>',
+                'meta_description' => 'Find out how to apply for admission to Demo Public School.',
+                'status' => 'published',
+                'published_at' => now(),
+            ]
+        );
+
+        CmsPost::firstOrCreate(
+            ['school_id' => $school->id, 'slug' => 'welcome-back-to-a-new-academic-year'],
+            [
+                'author_id' => $admin->id,
+                'title' => 'Welcome Back to a New Academic Year',
+                'excerpt' => 'We kicked off the new term with orientation activities for all grades.',
+                'content' => '<p>Students and staff returned this week for the start of a new academic year. Orientation activities were held across all grades, and we are looking forward to a great year ahead.</p>',
+                'status' => 'published',
+                'published_at' => now()->subDays(2),
+            ]
+        );
+
+        ContactMessage::firstOrCreate(
+            ['school_id' => $school->id, 'email' => 'prospective.parent@example.com'],
+            [
+                'name' => 'Prospective Parent',
+                'phone' => '+1 555 0100',
+                'message' => 'Hi, I would like to know more about the admissions process for Grade 1. Thank you!',
+                'is_read' => false,
             ]
         );
     }

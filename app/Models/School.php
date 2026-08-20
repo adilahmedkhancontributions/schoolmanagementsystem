@@ -23,6 +23,9 @@ class School extends Model
         'logo',
         'primary_color',
         'secondary_color',
+        'hero_headline',
+        'hero_subheadline',
+        'hero_image',
         'timezone',
         'currency',
         'academic_year',
@@ -32,6 +35,31 @@ class School extends Model
     public function logoUrl(): ?string
     {
         return $this->logo ? Storage::disk('public')->url($this->logo) : null;
+    }
+
+    public function heroImageUrl(): ?string
+    {
+        return $this->hero_image ? Storage::disk('public')->url($this->hero_image) : null;
+    }
+
+    public function cmsPages(): HasMany
+    {
+        return $this->hasMany(CmsPage::class);
+    }
+
+    public function cmsPosts(): HasMany
+    {
+        return $this->hasMany(CmsPost::class);
+    }
+
+    public function galleryImages(): HasMany
+    {
+        return $this->hasMany(GalleryImage::class);
+    }
+
+    public function contactMessages(): HasMany
+    {
+        return $this->hasMany(ContactMessage::class);
     }
 
     public function users(): HasMany

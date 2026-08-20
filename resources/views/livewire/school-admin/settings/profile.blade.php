@@ -65,6 +65,33 @@
             </div>
         </div>
 
+        <div class="card p-6">
+            <h2 class="font-heading font-bold text-slate-900 mb-1">Public website homepage</h2>
+            <p class="text-sm text-slate-500 mb-4">Shown on your public site's hero banner at <a href="{{ route('public.site.home', $school) }}" target="_blank" class="brand-text hover:underline">{{ route('public.site.home', $school) }}</a>.</p>
+
+            <div class="space-y-4">
+                <x-floating-input label="Hero headline (optional)" name="heroHeadline" wire:model="heroHeadline" />
+                <x-floating-input label="Hero subheadline (optional)" name="heroSubheadline" wire:model="heroSubheadline" />
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Hero image</label>
+                    <div class="flex items-center gap-3">
+                        @if ($heroImage)
+                            <img src="{{ $heroImage->temporaryUrl() }}" class="h-16 w-24 rounded-lg object-cover">
+                        @elseif ($school->heroImageUrl())
+                            <img src="{{ $school->heroImageUrl() }}" class="h-16 w-24 rounded-lg object-cover">
+                        @else
+                            <div class="h-16 w-24 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
+                                <i class="fa-solid fa-image"></i>
+                            </div>
+                        @endif
+                        <input type="file" wire:model="heroImage" accept="image/*" class="text-sm text-slate-600 file:mr-3 file:min-h-touch file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200">
+                    </div>
+                    @error('heroImage') <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+        </div>
+
         <div class="flex justify-end">
             <button type="submit" class="btn-primary">Save changes</button>
         </div>

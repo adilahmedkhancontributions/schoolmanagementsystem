@@ -33,6 +33,12 @@ class Profile extends Component
 
     public $logo = null;
 
+    public string $heroHeadline = '';
+
+    public string $heroSubheadline = '';
+
+    public $heroImage = null;
+
     public bool $saved = false;
 
     public function mount(): void
@@ -48,6 +54,8 @@ class Profile extends Component
         $this->academicYear = (string) $school->academic_year;
         $this->primaryColor = $school->primary_color;
         $this->secondaryColor = $school->secondary_color;
+        $this->heroHeadline = (string) $school->hero_headline;
+        $this->heroSubheadline = (string) $school->hero_subheadline;
     }
 
     public function render(): View
@@ -70,6 +78,9 @@ class Profile extends Component
             'primaryColor' => 'required|regex:/^#[0-9a-fA-F]{6}$/',
             'secondaryColor' => 'required|regex:/^#[0-9a-fA-F]{6}$/',
             'logo' => 'nullable|image|max:2048',
+            'heroHeadline' => 'nullable|string|max:150',
+            'heroSubheadline' => 'nullable|string|max:255',
+            'heroImage' => 'nullable|image|max:2048',
         ]);
 
         $data = [
@@ -82,15 +93,22 @@ class Profile extends Component
             'academic_year' => $validated['academicYear'] ?: null,
             'primary_color' => $validated['primaryColor'],
             'secondary_color' => $validated['secondaryColor'],
+            'hero_headline' => $validated['heroHeadline'] ?: null,
+            'hero_subheadline' => $validated['heroSubheadline'] ?: null,
         ];
 
         if ($this->logo) {
             $data['logo'] = $this->logo->store('school-logos', 'public');
         }
 
+        if ($this->heroImage) {
+            $data['hero_image'] = $this->heroImage->store('cms-hero', 'public');
+        }
+
         $this->school()->update($data);
 
         $this->logo = null;
+        $this->heroImage = null;
         $this->saved = true;
     }
 

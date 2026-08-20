@@ -32,7 +32,7 @@ class Navigation
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => 'school-admin.fees.invoices'],
                 ['label' => 'Exams', 'icon' => 'fa-file-pen', 'route' => 'school-admin.exams'],
                 ['label' => 'Reports', 'icon' => 'fa-chart-pie', 'route' => 'school-admin.reports.attendance'],
-                ['label' => 'CMS', 'icon' => 'fa-newspaper', 'route' => null],
+                ['label' => 'CMS', 'icon' => 'fa-newspaper', 'route' => 'school-admin.cms.pages'],
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'school-admin.announcements'],
                 ['label' => 'School Profile', 'icon' => 'fa-palette', 'route' => 'school-admin.settings'],
             ],

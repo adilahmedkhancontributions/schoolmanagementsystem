@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicSiteController;
 use App\Livewire\Announcements\Feed as AnnouncementsFeed;
 use App\Livewire\Attendance\Mark as MarkAttendance;
 use App\Livewire\Attendance\MyAttendance;
@@ -10,6 +11,10 @@ use App\Livewire\Exams\ReportCard;
 use App\Livewire\Fees\MyFees;
 use App\Livewire\SchoolAdmin\Announcements\Manage as ManageAnnouncements;
 use App\Livewire\SchoolAdmin\Classes\Manage as ManageClasses;
+use App\Livewire\SchoolAdmin\Cms\Gallery as ManageGallery;
+use App\Livewire\SchoolAdmin\Cms\Messages as ManageMessages;
+use App\Livewire\SchoolAdmin\Cms\Pages as ManagePages;
+use App\Livewire\SchoolAdmin\Cms\Posts as ManagePosts;
 use App\Livewire\SchoolAdmin\Exams\Manage as ManageExams;
 use App\Livewire\SchoolAdmin\Fees\Invoices as ManageFeeInvoices;
 use App\Livewire\SchoolAdmin\Fees\Structures as ManageFeeStructures;
@@ -55,6 +60,10 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/reports/exams', ExamReport::class)->name('reports.exams');
         Route::get('/reports/fees', FeesReport::class)->name('reports.fees');
         Route::get('/announcements', ManageAnnouncements::class)->name('announcements');
+        Route::get('/cms/pages', ManagePages::class)->name('cms.pages');
+        Route::get('/cms/posts', ManagePosts::class)->name('cms.posts');
+        Route::get('/cms/gallery', ManageGallery::class)->name('cms.gallery');
+        Route::get('/cms/messages', ManageMessages::class)->name('cms.messages');
     });
 
 Route::middleware(['auth', 'verified', 'role:super_admin'])
@@ -91,6 +100,17 @@ Route::middleware(['auth', 'verified', 'role:parent'])
         Route::get('/fees', MyFees::class)->name('fees');
         Route::get('/exams', ReportCard::class)->name('exams');
         Route::get('/announcements', AnnouncementsFeed::class)->name('announcements');
+    });
+
+Route::prefix('s/{school:slug}')
+    ->name('public.site.')
+    ->group(function () {
+        Route::get('/', [PublicSiteController::class, 'home'])->name('home');
+        Route::get('/pages/{slug}', [PublicSiteController::class, 'page'])->name('page');
+        Route::get('/blog', [PublicSiteController::class, 'blogIndex'])->name('blog');
+        Route::get('/blog/{slug}', [PublicSiteController::class, 'blogShow'])->name('blog.show');
+        Route::get('/gallery', [PublicSiteController::class, 'gallery'])->name('gallery');
+        Route::post('/contact', [PublicSiteController::class, 'contact'])->middleware('throttle:5,1')->name('contact');
     });
 
 require __DIR__.'/auth.php';

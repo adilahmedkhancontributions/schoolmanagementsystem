@@ -483,6 +483,74 @@ No changes were needed to these files this session.
 - `config/pwa.php`, `public/manifest.json` (re-branded, `standalone` display)
 - `resources/views/layouts/dashboard.blade.php`, `resources/views/layouts/guest.blade.php`, `resources/views/welcome.blade.php` (`@PwaHead`, apple meta tags, `viewport-fit=cover`)
 
+## Phase 4 — CMS Module (this session)
+
+| Item | Status |
+|---|---|
+| Public front page & CMS: Hero, About/Admissions/custom pages, Announcements, Blog, Gallery, Contact form | ✅ Done |
+| Admin CMS: Pages CRUD with lightweight WYSIWYG editor + SEO fields + draft/published | ✅ Done |
+| Admin CMS: Blog Posts CRUD with featured image upload + scheduled publishing | ✅ Done |
+| Admin CMS: Gallery CRUD (multi-upload, reorder, captions) | ✅ Done |
+| Admin CMS: Contact message inbox (mark read / delete) | ✅ Done |
+| Admin CMS: Homepage Hero (headline/subheadline/image) folded into School Profile settings | ✅ Done |
+| Full drag-and-drop page builder / dedicated media library browser | ❌ Not started — see notes below |
+
+### Notes / design choices (CMS)
+
+- **Public site is per-school**, served at `/s/{school:slug}` (`PublicSiteController` + plain Blade, no
+  auth) — home (hero, announcements, about/admissions page teasers, gallery preview, latest posts, contact
+  form), `/pages/{slug}` for any published `CmsPage`, `/blog` + `/blog/{slug}`, `/gallery`. This is separate
+  from the platform's own `welcome.blade.php` (which markets the SaaS product itself, not a specific
+  school) — a school's public site is themed with that school's `primary_color`/`secondary_color` via the
+  same CSS-variable mechanism the dashboard shell already uses.
+- **No new WYSIWYG/editor npm package** — `x-rich-text-editor` (`resources/views/components/rich-text-editor.blade.php`)
+  is a `contenteditable` div with an Alpine-driven toolbar calling `document.execCommand` (bold/italic/
+  underline/headings/lists/link/clear-formatting), synced to the Livewire property on blur/input via
+  `$wire.set(...)`. Matches the existing architecture decision to keep the app light for shared hosting
+  and avoid new dependencies; sufficient for the "hero/about/admissions/blog" copy this CMS targets. A real
+  block-based drag-and-drop builder (as the original spec's "WYSIWYG, drag-and-drop" wording implies) was
+  judged out of scope for the value it adds here and is called out as the one deliberately deferred piece.
+- **Stored-XSS mitigation**: CMS page/post `content` is raw HTML from the editor and later rendered
+  unescaped (`{!! !!}`) on the public site to anonymous visitors, so a compromised/malicious School Admin
+  account could otherwise plant a stored XSS payload. Added `App\Support\HtmlSanitizer::clean()` — a
+  dependency-free allow-list tag strip (`strip_tags` with a fixed allow-list) plus regex removal of
+  `on*="..."` event-handler attributes and `javascript:` URIs — applied in `Pages::save()` and
+  `Posts::save()` before persisting. Not a full HTML sanitizer (no `mews/purifier`/`HTMLPurifier` dependency
+  added, consistent with the shared-hosting/minimal-footprint decision) but closes the realistic attack
+  surface for this editor.
+- **No separate "media library"** — matches the existing precedent (school logo upload is inline on its own
+  form, not picked from a shared library): blog post featured images and gallery images are uploaded
+  per-item via `WithFileUploads`, stored on the `public` disk (`cms-posts/`, `cms-gallery/`, `cms-hero/`),
+  same as `school-logos/`. Revisit if a school accumulates enough images that a searchable/reusable library
+  becomes worth the complexity.
+- Gallery reordering is simple up/down swap buttons (`sort_order` swap between adjacent rows), not
+  drag-and-drop — no JS sortable library installed and this keeps the same "no new dependency" stance.
+- Contact form has a hidden honeypot field (`website`, `prohibited` validation rule) plus `throttle:5,1` on
+  the POST route as basic spam/abuse mitigation — no CAPTCHA service configured (would need third-party
+  credentials, same as the deferred payment/SMS integrations).
+- `CmsPage`/`CmsPost` slugs are unique **per school** (`unique(['school_id','slug'])`), not globally, so two
+  schools can each have their own `/about` page; validated with `Rule::unique(...)->where('school_id', ...)`.
+- Homepage hero fields (`hero_headline`, `hero_subheadline`, `hero_image`) live directly on the `schools`
+  table (next to the existing theme color columns) and are edited from the existing School Admin → School
+  Profile screen rather than a new page, since it's the same "branding" concern as logo/colors.
+- CMS nav item in `app/Support/Navigation.php` (previously a disabled "Coming soon" placeholder) now links
+  to `school-admin.cms.pages`; a shared tab bar (`livewire/school-admin/cms/_tabs.blade.php`, same pattern
+  as Reports) switches between Pages/Blog/Gallery/Messages and links out to "Homepage Hero" (Settings) and
+  "View Public Site" (opens the live `/s/{slug}` page in a new tab).
+
+### Files added/changed this session (CMS)
+
+- `database/migrations/2024_01_09_00000{0,1,2,3,4}_*.php` (hero fields on `schools`, `cms_pages`, `cms_posts`, `cms_gallery_images`, `contact_messages`)
+- `app/Models/{CmsPage,CmsPost,GalleryImage,ContactMessage}.php`; `app/Models/School.php` (hero fields, `heroImageUrl()`, CMS relations)
+- `app/Support/HtmlSanitizer.php`
+- `app/Livewire/SchoolAdmin/Cms/{Pages,Posts,Gallery,Messages}.php` + matching `resources/views/livewire/school-admin/cms/{pages,posts,gallery,messages}.blade.php` + `_tabs.blade.php`
+- `resources/views/components/rich-text-editor.blade.php`; `resources/css/app.css` (`.editor-btn`, `.cms-content` typography)
+- `app/Http/Controllers/PublicSiteController.php`; `resources/views/components/public-site-layout.blade.php`; `resources/views/cms/public/{home,page,blog-index,blog-show,gallery}.blade.php`
+- `app/Livewire/SchoolAdmin/Settings/Profile.php` + view (Homepage Hero fields)
+- `routes/web.php` (`school-admin.cms.*`, public `public.site.*` routes at `/s/{school:slug}`)
+- `app/Support/Navigation.php` (CMS nav item wired to `school-admin.cms.pages`)
+- `database/seeders/DemoDataSeeder.php` (demo About/Admissions pages, one blog post, one contact message, hero copy on the demo school)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)
