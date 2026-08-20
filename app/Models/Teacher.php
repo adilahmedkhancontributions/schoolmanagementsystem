@@ -57,4 +57,9 @@ class Teacher extends Model
     {
         return $this->hasMany(TimetableEntry::class);
     }
+
+    public function timetableChangeRequests(): HasMany
+    {
+        return $this->hasMany(TimetableChangeRequest::class);
+    }
 }

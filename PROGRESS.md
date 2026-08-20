@@ -647,6 +647,52 @@ No changes were needed to these files this session.
 - `app/Support/Navigation.php` (Timetable nav item added for school_admin; wired up for teacher/student, previously "coming soon")
 - `database/seeders/DemoDataSeeder.php` (two demo time slots + two demo timetable entries for the demo section)
 
+## Phase 2/3 — Timetable Change Requests (this session)
+
+| Item | Status |
+|---|---|
+| Teacher "All Timetables" view — browse every class/section's schedule, not just their own | ✅ Done |
+| Teacher's own periods list with "Request Change" action | ✅ Done |
+| Teacher-submitted request form (new subject/class-section/period/day, all optional + required reason) | ✅ Done |
+| Teacher's own request history with status (pending/approved/rejected) + admin note | ✅ Done |
+| School Admin "Change Requests" tab — filter by pending/approved/rejected/all | ✅ Done |
+| Approve action — applies requested field(s) directly onto the underlying `TimetableEntry`, with a conflict check (same section+slot+day already taken by another entry blocks the approval) | ✅ Done |
+| Reject action with optional admin note | ✅ Done |
+
+### Notes / design choices (Timetable Change Requests)
+
+- New table `timetable_change_requests`: snapshots the entry's current
+  `section_id`/`subject_id`/`timetable_slot_id`/`day_of_week` at request time (`current_*` columns) plus the
+  teacher's desired `requested_*` columns (all nullable — a null column means "no change requested for that
+  field"), a required `reason` text field, `status` (`pending`/`approved`/`rejected`), and `admin_note` +
+  `reviewed_by`/`reviewed_at` for the admin's decision.
+- `App\Livewire\Timetable\AllTimetables` replaces `MyTimetable` on the **teacher** route only
+  (`teacher.timetable`); the Student route still points at the original read-only `MyTimetable` component
+  since students don't need to browse other classes or request changes. The class/section browser reuses the
+  same `availableClasses()`/`availableSections()` tenant-scoping pattern as `SchoolAdmin\Timetable\Manage`.
+- Request submission validates that at least one `requested_*` field is set (can't submit an empty request)
+  and that the entry being modified actually belongs to the requesting teacher
+  (`TimetableEntry::where('teacher_id', $teacher->id)->findOrFail(...)`).
+- Approval logic (`SchoolAdmin\Timetable\Requests::approve()`) merges each requested field over the entry's
+  current value (`$request->requested_section_id ?? $entry->section_id`, etc.), then re-checks the
+  `(section_id, timetable_slot_id, day_of_week)` uniqueness constraint against every other entry before
+  saving — if another subject is already scheduled in that slot, the approval is blocked with a flashed error
+  and the request stays pending so the admin can reject it or ask the teacher to adjust.
+- `teacher_id` on the entry is intentionally left untouched on approval (it stays the requesting teacher) even
+  if the requested subject's own `Subject::teacher_id` differs — the assumption is the requesting teacher is
+  the one who will actually teach that slot going forward.
+- Added a "Change Requests" tab alongside the existing "Timetable"/"Time Slots" tabs in
+  `resources/views/livewire/school-admin/timetable/_tabs.blade.php`.
+
+### Files added/changed this session (Timetable Change Requests)
+
+- `database/migrations/2024_01_12_000000_create_timetable_change_requests_table.php`
+- `app/Models/TimetableChangeRequest.php`; added `timetableChangeRequests()` to `app/Models/Teacher.php`
+- `app/Livewire/Timetable/AllTimetables.php` + `resources/views/livewire/timetable/all-timetables.blade.php`
+- `app/Livewire/SchoolAdmin/Timetable/Requests.php` + `resources/views/livewire/school-admin/timetable/requests.blade.php`
+- `resources/views/livewire/school-admin/timetable/_tabs.blade.php` (added "Change Requests" tab)
+- `routes/web.php` (`school-admin.timetable.requests`; `teacher.timetable` now points at `AllTimetables` instead of `MyTimetable`)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)

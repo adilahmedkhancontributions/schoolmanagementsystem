@@ -27,8 +27,10 @@ use App\Livewire\SchoolAdmin\Students\Manage as ManageStudents;
 use App\Livewire\SchoolAdmin\Subjects\Manage as ManageSubjects;
 use App\Livewire\SchoolAdmin\Teachers\Manage as ManageTeachers;
 use App\Livewire\SchoolAdmin\Timetable\Manage as ManageTimetable;
+use App\Livewire\SchoolAdmin\Timetable\Requests as ManageTimetableRequests;
 use App\Livewire\SchoolAdmin\Timetable\Slots as ManageTimetableSlots;
 use App\Livewire\SuperAdmin\Schools\Manage as ManageSchools;
+use App\Livewire\Timetable\AllTimetables;
 use App\Livewire\Timetable\MyTimetable;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +72,7 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/cms/messages', ManageMessages::class)->name('cms.messages');
         Route::get('/timetable', ManageTimetable::class)->name('timetable.manage');
         Route::get('/timetable/slots', ManageTimetableSlots::class)->name('timetable.slots');
+        Route::get('/timetable/requests', ManageTimetableRequests::class)->name('timetable.requests');
     });
 
 Route::middleware(['auth', 'verified', 'role:super_admin'])
@@ -87,7 +90,7 @@ Route::middleware(['auth', 'verified', 'role:teacher'])
         Route::get('/exams/grades', GradeEntry::class)->name('exams.grades');
         Route::get('/announcements', AnnouncementsFeed::class)->name('announcements');
         Route::get('/messages', MessagingInbox::class)->name('messages');
-        Route::get('/timetable', MyTimetable::class)->name('timetable');
+        Route::get('/timetable', AllTimetables::class)->name('timetable');
     });
 
 Route::middleware(['auth', 'verified', 'role:student'])

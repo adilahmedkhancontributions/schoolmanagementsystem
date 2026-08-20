@@ -2,6 +2,7 @@
     $tabs = [
         'manage' => ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => 'school-admin.timetable.manage'],
         'slots' => ['label' => 'Time Slots', 'icon' => 'fa-clock', 'route' => 'school-admin.timetable.slots'],
+        'requests' => ['label' => 'Change Requests', 'icon' => 'fa-arrows-rotate', 'route' => 'school-admin.timetable.requests'],
     ];
 @endphp
 
