@@ -75,6 +75,11 @@ class User extends Authenticatable
         return $this->hasOne(Guardian::class);
     }
 
+    public function staffProfile(): HasOne
+    {
+        return $this->hasOne(Staff::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

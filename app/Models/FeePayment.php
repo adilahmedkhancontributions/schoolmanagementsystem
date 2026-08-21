@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FeePayment extends Model
 {
     use HasFactory;
+    use \App\Support\Auditable;
 
     protected $fillable = [
         'fee_invoice_id',

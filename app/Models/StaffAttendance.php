@@ -8,15 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
-class Attendance extends Model
+class StaffAttendance extends Model
 {
     use HasFactory;
     use \App\Support\Auditable;
 
     protected $fillable = [
         'school_id',
-        'section_id',
-        'student_id',
+        'user_id',
         'date',
         'status',
         'remarks',
@@ -36,14 +35,9 @@ class Attendance extends Model
         return $this->belongsTo(School::class);
     }
 
-    public function section(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Section::class);
-    }
-
-    public function student(): BelongsTo
-    {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(User::class);
     }
 
     public function marker(): BelongsTo

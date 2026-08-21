@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ExamResult extends Model
 {
     use HasFactory;
+    use \App\Support\Auditable;
 
     protected $fillable = [
         'exam_subject_id',

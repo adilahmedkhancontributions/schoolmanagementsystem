@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Student extends Model
 {
     use HasFactory;
+    use \App\Support\Auditable;
 
     protected $fillable = [
         'user_id',

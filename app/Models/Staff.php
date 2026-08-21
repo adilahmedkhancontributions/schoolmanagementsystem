@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Teacher extends Model
+class Staff extends Model
 {
     use HasFactory;
     use \App\Support\Auditable;
+
+    protected $table = 'staff';
 
     protected $fillable = [
         'user_id',
         'school_id',
         'employee_id',
-        'qualification',
-        'specialization',
+        'designation',
+        'department',
         'joining_date',
         'employment_type',
     ];
@@ -37,30 +38,5 @@ class Teacher extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
-    }
-
-    public function sections(): HasMany
-    {
-        return $this->hasMany(Section::class);
-    }
-
-    public function subjects(): HasMany
-    {
-        return $this->hasMany(Subject::class);
-    }
-
-    public function conversations(): HasMany
-    {
-        return $this->hasMany(Conversation::class);
-    }
-
-    public function timetableEntries(): HasMany
-    {
-        return $this->hasMany(TimetableEntry::class);
-    }
-
-    public function timetableChangeRequests(): HasMany
-    {
-        return $this->hasMany(TimetableChangeRequest::class);
     }
 }

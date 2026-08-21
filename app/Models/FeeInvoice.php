@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class FeeInvoice extends Model
 {
     use HasFactory;
+    use \App\Support\Auditable;
 
     protected $fillable = [
         'school_id',
@@ -51,15 +52,35 @@ class FeeInvoice extends Model
         return $this->hasMany(FeePayment::class);
     }
 
+    public function discounts(): HasMany
+    {
+        return $this->hasMany(FeeDiscount::class);
+    }
+
+    public function discountTotal(): string
+    {
+        return $this->discounts->reduce(
+            fn ($carry, $discount) => bcadd($carry, $discount->amountFor((string) $this->amount), 2),
+            '0.00'
+        );
+    }
+
+    public function netAmount(): string
+    {
+        return bcsub((string) $this->amount, $this->discountTotal(), 2);
+    }
+
     public function balance(): string
     {
-        return bcsub((string) $this->amount, (string) $this->paid_amount, 2);
+        return bcsub($this->netAmount(), (string) $this->paid_amount, 2);
     }
 
     public function refreshStatus(): void
     {
+        $net = $this->netAmount();
+
         $this->status = match (true) {
-            bccomp((string) $this->paid_amount, (string) $this->amount, 2) >= 0 => 'paid',
+            bccomp((string) $this->paid_amount, $net, 2) >= 0 => 'paid',
             bccomp((string) $this->paid_amount, '0', 2) > 0 => 'partial',
             default => 'unpaid',
         };

@@ -23,12 +23,15 @@ use App\Livewire\SchoolAdmin\Reports\Attendance as AttendanceReport;
 use App\Livewire\SchoolAdmin\Reports\Exams as ExamReport;
 use App\Livewire\SchoolAdmin\Reports\Fees as FeesReport;
 use App\Livewire\SchoolAdmin\Settings\Profile as SchoolProfile;
+use App\Livewire\SchoolAdmin\Staff\Manage as ManageStaff;
 use App\Livewire\SchoolAdmin\Students\Manage as ManageStudents;
 use App\Livewire\SchoolAdmin\Subjects\Manage as ManageSubjects;
 use App\Livewire\SchoolAdmin\Teachers\Manage as ManageTeachers;
 use App\Livewire\SchoolAdmin\Timetable\Manage as ManageTimetable;
 use App\Livewire\SchoolAdmin\Timetable\Requests as ManageTimetableRequests;
 use App\Livewire\SchoolAdmin\Timetable\Slots as ManageTimetableSlots;
+use App\Livewire\StaffAttendance\Mark as MarkStaffAttendance;
+use App\Livewire\StaffAttendance\MyAttendance as MyStaffAttendance;
 use App\Livewire\SuperAdmin\Schools\Manage as ManageSchools;
 use App\Livewire\Timetable\AllTimetables;
 use App\Livewire\Timetable\MyTimetable;
@@ -56,6 +59,8 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/subjects', ManageSubjects::class)->name('subjects');
         Route::get('/teachers', ManageTeachers::class)->name('teachers');
         Route::get('/students', ManageStudents::class)->name('students');
+        Route::get('/staff', ManageStaff::class)->name('staff');
+        Route::get('/staff/attendance', MarkStaffAttendance::class)->name('staff.attendance');
         Route::get('/attendance', MarkAttendance::class)->name('attendance');
         Route::get('/settings', SchoolProfile::class)->name('settings');
         Route::get('/fees/structures', ManageFeeStructures::class)->name('fees.structures');
@@ -87,10 +92,18 @@ Route::middleware(['auth', 'verified', 'role:teacher'])
     ->name('teacher.')
     ->group(function () {
         Route::get('/attendance', MarkAttendance::class)->name('attendance');
+        Route::get('/staff-attendance', MyStaffAttendance::class)->name('staff-attendance');
         Route::get('/exams/grades', GradeEntry::class)->name('exams.grades');
         Route::get('/announcements', AnnouncementsFeed::class)->name('announcements');
         Route::get('/messages', MessagingInbox::class)->name('messages');
         Route::get('/timetable', AllTimetables::class)->name('timetable');
+    });
+
+Route::middleware(['auth', 'verified', 'role:staff'])
+    ->prefix('staff-portal')
+    ->name('staff.')
+    ->group(function () {
+        Route::get('/attendance', MyStaffAttendance::class)->name('attendance');
     });
 
 Route::middleware(['auth', 'verified', 'role:student'])

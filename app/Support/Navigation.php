@@ -26,10 +26,12 @@ class Navigation
             'school_admin' => [
                 ['label' => 'Students', 'icon' => 'fa-user-graduate', 'route' => 'school-admin.students'],
                 ['label' => 'Teachers', 'icon' => 'fa-chalkboard-user', 'route' => 'school-admin.teachers'],
+                ['label' => 'Staff', 'icon' => 'fa-id-badge', 'route' => 'school-admin.staff'],
                 ['label' => 'Classes', 'icon' => 'fa-layer-group', 'route' => 'school-admin.classes'],
                 ['label' => 'Subjects', 'icon' => 'fa-book', 'route' => 'school-admin.subjects'],
                 ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => 'school-admin.timetable.manage'],
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'school-admin.attendance'],
+                ['label' => 'Staff Attendance', 'icon' => 'fa-clipboard-user', 'route' => 'school-admin.staff.attendance'],
                 ['label' => 'Fees', 'icon' => 'fa-file-invoice-dollar', 'route' => 'school-admin.fees.invoices'],
                 ['label' => 'Exams', 'icon' => 'fa-file-pen', 'route' => 'school-admin.exams'],
                 ['label' => 'Reports', 'icon' => 'fa-chart-pie', 'route' => 'school-admin.reports.attendance'],
@@ -40,6 +42,7 @@ class Navigation
             'teacher' => [
                 ['label' => 'Timetable', 'icon' => 'fa-calendar-days', 'route' => 'teacher.timetable'],
                 ['label' => 'Attendance', 'icon' => 'fa-calendar-check', 'route' => 'teacher.attendance'],
+                ['label' => 'My Attendance', 'icon' => 'fa-clipboard-user', 'route' => 'teacher.staff-attendance'],
                 ['label' => 'Grades', 'icon' => 'fa-file-pen', 'route' => 'teacher.exams.grades'],
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'teacher.announcements'],
                 ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => 'teacher.messages'],
@@ -59,6 +62,9 @@ class Navigation
                 ['label' => 'Announcements', 'icon' => 'fa-bullhorn', 'route' => 'parent.announcements'],
                 ['label' => 'Messages', 'icon' => 'fa-comments', 'route' => 'parent.messages'],
             ],
+            'staff' => [
+                ['label' => 'My Attendance', 'icon' => 'fa-clipboard-user', 'route' => 'staff.attendance'],
+            ],
         ];
 
         return array_merge($shared, $byRole[$role] ?? []);
@@ -72,6 +78,7 @@ class Navigation
             'teacher' => 'Teacher',
             'student' => 'Student',
             'parent' => 'Parent',
+            'staff' => 'Staff',
             default => ucfirst($role),
         };
     }

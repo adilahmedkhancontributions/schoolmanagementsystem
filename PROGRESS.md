@@ -13,6 +13,142 @@ erag/laravel-pwa 2, Breeze (Blade auth scaffolding).
 > `composer install`, `cp .env.example .env`, `php artisan key:generate`,
 > configure `DB_*` in `.env`, `php artisan migrate --seed`, `npm install && npm run build`.
 
+## SRS v1.0 Realignment (this session)
+
+The project manager supplied `/SoftwareRequirementsSpecification(SRS).txt` — a
+full 89-section product spec for a multi-school SaaS platform ("Product
+Master Specification", targeting private schools in Attock/Punjab,
+Pakistan). It is **much broader** than everything built so far: it adds
+Admissions, Staff/HR/Payroll, Leave Management, Fee Discounts/Concessions/
+Defaulters, Homework/LMS/Quizzes, Library, Transport, Inventory, Visitor/
+Complaint/Discipline/Health records, Certificates, ID cards, Audit Logs,
+Data Import/Export, WhatsApp/SMS, subscriptions/billing, and AI features —
+on top of everything already in Phases 1–4 below. **This document is now
+tracked against the SRS's own section numbers** so it's always clear which
+of the 89 sections are covered, partial, or not started.
+
+The SRS's own §77 "MVP Definition" lists 36 mandatory modules and explicitly
+excludes Payroll, full HR, Library, Transport, Inventory, WhatsApp/SMS,
+online payment gateways, AI, mobile apps, offline sync, and biometrics/GPS
+from MVP (deferred to its Phase 2/Phase 3, §78–79). That phasing is adopted
+here instead of inventing a separate one.
+
+### Coverage vs. SRS sections
+
+| # | SRS Section | Status |
+|---|---|---|
+| 1–5 | Purpose/Vision/Objectives/Users/Stakeholders | 📄 Docs only (product framing, no direct code) |
+| 6 | User Role and Permission System | ✅ Done (Spatie roles: super_admin/school_admin/teacher/student/parent) — ⚠️ SRS wants finer-grained configurable permissions (view/create/edit/delete/approve/export/print/manage/configure) per role beyond Spatie's default permission list; not built |
+| 7 | Multi-School Architecture | ✅ Done (single DB, `school_id` scoping) |
+| 8 | Multi-Campus Support | ❌ Not started — no `campuses` table; every school is currently single-campus |
+| 9 | School Configuration | 🟡 Partial — name/logo/colors/contact done; academic calendar, configurable grading system, configurable fee/attendance rules not done |
+| 10 | School Dashboard | 🟡 Partial — student/attendance/finance/academic metric cards exist; "Alerts" (low attendance, missing marks, pending approvals) not built |
+| 11 | Admissions Management | ❌ Not started — students are created directly by School Admin, no inquiry→interview→test→enrol pipeline or document uploads |
+| 12 | Student Management | 🟡 Partial — core profile + CRUD done; no father/mother name split, B-form/CNIC, medical info, or status lifecycle (Applicant/Active/Transferred/Withdrawn/Graduated/Suspended/Expelled) beyond implicit active |
+| 13 | Parent and Guardian Management | ✅ Done (guardian↔student pivot, child switcher) |
+| 14 | Academic Session Management | ❌ Not started — no `academic_sessions`/year-rollover/promotion workflow; classes/sections are not session-scoped |
+| 15 | Classes, Sections and Subjects | ✅ Done |
+| 16 | Teacher Management | ✅ Done |
+| 17 | Staff Management (non-teaching) | ✅ Done |
+| 18 | Timetable Management | 🟡 Partial — class/teacher timetable + change requests + conflict-safe approval done; no room timetable/room-conflict detection |
+| 19 | Student Attendance | ✅ Done |
+| 20 | Staff Attendance | ✅ Done |
+| 21 | Leave Management | ✅ Done this session (student + staff/teacher leave requests, approval workflow) |
+| 22 | Fee Management | ✅ Done (categories via fee structures, monthly/custom schedules) |
+| 23 | Discounts and Concessions | ✅ Done this session (sibling/scholarship/staff-child/need-based/custom, % or fixed) |
+| 24 | Fee Collection | 🟡 Partial — cash/bank/cheque/online/other manual recording + partial payments done; no challans, JazzCash/Easypaisa, refunds, or receipt numbering |
+| 25 | Fee Defaulters | ✅ Done this session (class-wise outstanding list, CSV export) |
+| 26 | Examination Management | ✅ Done |
+| 27 | Marks Management | 🟡 Partial — single marks-obtained field per subject; no MCQ/short/long/practical/viva component breakdown |
+| 28 | Result Management | 🟡 Partial — per-exam report card done; no transcripts/GPA/configurable grade scale |
+| 29 | Result Analytics | ✅ Done (folded into Reports → Exams) |
+| 30 | Report Card Builder | ❌ Not started — report card layout is fixed, not a per-school configurable template |
+| 31 | Homework Management | ❌ Not started |
+| 32 | Learning Management System | ❌ Not started |
+| 33 | Quiz System | ❌ Not started |
+| 34 | Parent Portal | ✅ Done |
+| 35 | Student Portal | ✅ Done |
+| 36 | Teacher Portal | ✅ Done |
+| 37 | Communication Management | 🟡 Partial — announcements + teacher↔parent messaging done; email/SMS/WhatsApp delivery not done |
+| 38 | WhatsApp Integration | ❌ Not started (SRS: Phase 2) |
+| 40 | Events and Calendar | ❌ Not started |
+| 41 | Library Management | ❌ Not started (SRS: Phase 2) |
+| 43 | HR Management | ❌ Not started (SRS: Phase 2) |
+| 44 | Payroll Management | ❌ Not started (SRS: Phase 2) |
+| 45 | Inventory Management | ❌ Not started (SRS: Phase 2) |
+| 46 | School Store | ❌ Not started (SRS: Phase 2) |
+| 49 | Visitor Management | ❌ Not started (SRS: Phase 2) |
+| 50 | Complaint Management | ❌ Not started (SRS: Phase 2) |
+| 51 | Discipline Management | ❌ Not started (SRS: Phase 2) |
+| 52 | Student Health Records | ❌ Not started (SRS: Phase 2) |
+| 53 | Certificates | ❌ Not started (SRS: Phase 2) |
+| 54 | ID Card Generation | ❌ Not started (SRS: Phase 2) |
+| 55 | Reporting System | 🟡 Partial — attendance/exam/fee reports with CSV export done; no PDF export |
+| 56 | Owner Analytics | ❌ Not started — no cross-school Super Admin analytics dashboard |
+| 57 | AI Features | ❌ Not started (SRS: Phase 3) |
+| 58 | Notifications | 🟡 Partial — in-app + email (timetable changes) done; SMS/WhatsApp/push not done |
+| 59 | Search | ❌ Not started — no global cross-module search |
+| 60 | Audit Logs | ✅ Done this session (generic audit trail on key models + School Admin viewer) |
+| 61 | Security Requirements | 🟡 Partial — Laravel/Breeze auth, CSRF, validation, role middleware in place; no explicit rate-limiting review, account lockout, or field-level encryption yet |
+| 62 | Data Isolation | ✅ Done (manual `school_id` scoping in every query — see architecture note) |
+| 63 | Backup and Recovery | ❌ Not started — no backup tooling configured |
+| 64 | Data Export | 🟡 Partial — CSV export exists for Reports only, not Students/Fees/Attendance/Results in general |
+| 65 | Data Import | ❌ Not started — no bulk CSV/Excel import for students/staff/results |
+| 66 | API Architecture | ❌ Not started — server-rendered Livewire only, no public API layer |
+| 67 | Mobile Strategy | ✅ Responsive web done; native apps out of scope (SRS: Phase 3) |
+| 68 | Offline Capability | ❌ Not started (SRS: explicitly deferred) |
+| 69 | Localization | ❌ Not started — English only, no Urdu |
+| 70 | Pakistani School Support | ❌ Not started — no B-form/board/Islamiat-specific fields, no PKR currency formatting, no JazzCash/Easypaisa |
+| 71–74 | Non-functional (performance/scalability/availability/maintainability) | 🟡 Ongoing — Eloquent scoping + pagination in place; no caching/queue/index audit done yet |
+| 75 | Customization Architecture | 🟡 Partial — theming/branding configurable; grading/fee/result templates are not |
+| 76 | Subscription Architecture | ❌ Not started — no plans/billing/limits for the SaaS platform itself |
+| 77 | MVP Definition | See per-item mapping above — most of the 36 MVP items exist except Admissions, Staff, Staff Attendance, Homework/basic LMS, Data Import/Export |
+| 78–79 | Phase 2 / Phase 3 | Correctly still not started — out of scope until MVP gaps above are closed |
+| 80–89 | Architecture/strategy/process guidance | 📄 Docs only — informs future work, no direct deliverable |
+
+### Notes / design choices (this session's additions)
+
+- **Audit Logs**: one generic `audit_logs` table (`user_id`, `school_id`,
+  `auditable_type`/`auditable_id`, `action`, `old_values`/`new_values` JSON,
+  `ip_address`) populated by an `App\Support\Auditable` trait's
+  `created`/`updated`/`deleted` model event hooks — added to `Student`,
+  `Teacher`, `FeeInvoice`, `FeePayment`, `ExamResult`, and `Attendance` (the
+  models the SRS's own example — "Accountant changed a fee balance" — and
+  general MVP intent most directly call out) rather than every model in the
+  app, to keep the log signal-focused. School Admin gets a read-only,
+  paginated, filterable (`by model type`, `by user`) log viewer.
+- **Fee Discounts/Concessions**: a `fee_discounts` table (type: sibling/
+  scholarship/staff_child/need_based/custom, `is_percentage` + `value`,
+  optional `notes` for justification) linked to a `fee_invoice_id`;
+  `FeeInvoice::refreshStatus()` now nets discounts off the billed amount
+  before computing `paid`/`partial`/`unpaid`. Applying a discount requires
+  School Admin (same `role:school_admin` gate as everything else in Fees —
+  the SRS's "appropriate authorization" requirement is met by there being no
+  Teacher/Student/Parent write access to this screen, consistent with every
+  other Fees screen).
+- **Fee Defaulters**: a fourth tab alongside the existing Reports (Attendance/
+  Exams/Fees) — lists every student with `status != 'paid'`, days overdue
+  (`now() - due_date`), and outstanding balance (post-discount), grouped by
+  class, with the same CSV export pattern as the other three reports.
+- **Leave Management**: one `leave_requests` table (`user_id` = requester,
+  `student_id` nullable for a parent-submitted student leave vs. null for a
+  staff/teacher's own leave, `from_date`/`to_date`/`reason`/`status`
+  pending/approved/rejected, `reviewed_by`/`reviewed_at`/`admin_note` —
+  same shape as `TimetableChangeRequest`, reused deliberately since it's
+  already proven to work for a "request → review → approve/reject" flow).
+  Parent submits on behalf of a child (re-validated against their own
+  children, same guard pattern as `MyAttendance`); Teacher submits for
+  themselves. School Admin approves/rejects both from one screen with a
+  type filter (Student/Staff).
+
+### Files added/changed this session (SRS Realignment)
+
+(See per-module "Files added/changed" lists further down, filed under their
+matching Phase headings, added at the point in this doc where each module's
+peers already live — Audit Logs and Leave Management are new so they get
+their own headings before "Phase 5 — Polish & Deployment"; Discounts/
+Defaulters extend the existing Phase 3 Fees/Reports sections in place.)
+
 ## Architecture decisions (assumed, revisit if wrong)
 
 - **Multi-school, single database**: a `schools` table + `school_id` scoping

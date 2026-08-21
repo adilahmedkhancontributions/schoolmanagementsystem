@@ -16,6 +16,7 @@ use App\Models\Message;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Section;
+use App\Models\Staff;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -82,6 +83,23 @@ class DemoDataSeeder extends Seeder
         $subject = Subject::firstOrCreate(
             ['school_id' => $school->id, 'school_class_id' => $class->id, 'code' => 'MATH5'],
             ['name' => 'Mathematics', 'teacher_id' => $teacher->id]
+        );
+
+        $staffUser = User::firstOrCreate(
+            ['email' => 'staff@demoschool.test'],
+            ['name' => 'Demo Staff', 'password' => 'password', 'school_id' => $school->id, 'status' => 'active']
+        );
+        $staffUser->assignRole('staff');
+        Staff::firstOrCreate(
+            ['user_id' => $staffUser->id],
+            [
+                'school_id' => $school->id,
+                'employee_id' => 'STF-0001',
+                'designation' => 'Accountant',
+                'department' => 'Finance',
+                'employment_type' => 'full_time',
+                'joining_date' => now(),
+            ]
         );
 
         $studentUser = User::firstOrCreate(
