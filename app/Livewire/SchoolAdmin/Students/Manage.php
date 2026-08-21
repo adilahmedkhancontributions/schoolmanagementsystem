@@ -11,12 +11,14 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use App\Models\Document;
 
 #[Layout('layouts.dashboard')]
 class Manage extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public string $search = '';
 
@@ -25,10 +27,15 @@ class Manage extends Component
     public ?int $filterSectionId = null;
 
     public bool $showModal = false;
+    public bool $showDocumentsModal = false;
 
     public ?int $studentId = null;
+    public ?int $docStudentId = null;
 
     public ?int $userId = null;
+    public $documents = [];
+    public ?string $documentTitle = null;
+    public $documentFile;
 
     public string $name = '';
 
@@ -191,6 +198,56 @@ class Manage extends Component
         $user?->delete();
     }
 
+    public function openDocuments(int $id): void
+    {
+        $this->docStudentId = $id;
+        $this->loadDocuments();
+        $this->showDocumentsModal = true;
+    }
+
+    public function loadDocuments(): void
+    {
+        $this->documents = Document::where('documentable_type', Student::class)
+            ->where('documentable_id', $this->docStudentId)
+            ->get();
+    }
+
+    public function uploadDocument(): void
+    {
+        $this->validate([
+            'documentTitle' => 'required|string|max:255',
+            'documentFile' => 'required|file|max:10240',
+        ]);
+
+        $path = $this->documentFile->store('documents', 'public');
+
+        Document::create([
+            'school_id' => auth()->user()->school_id,
+            'documentable_type' => Student::class,
+            'documentable_id' => $this->docStudentId,
+            'title' => $this->documentTitle,
+            'file_path' => $path,
+            'file_type' => $this->documentFile->getClientOriginalExtension(),
+        ]);
+
+        $this->reset(['documentTitle', 'documentFile']);
+        $this->loadDocuments();
+    }
+
+    public function deleteDocument(int $id): void
+    {
+        $doc = Document::where('school_id', auth()->user()->school_id)->findOrFail($id);
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+        $doc->delete();
+        $this->loadDocuments();
+    }
+
+    public function closeDocumentsModal(): void
+    {
+        $this->showDocumentsModal = false;
+        $this->reset(['docStudentId', 'documents', 'documentTitle', 'documentFile']);
+    }
+
     public function closeModal(): void
     {
         $this->showModal = false;
@@ -204,7 +261,7 @@ class Manage extends Component
 
     private function resetForm(bool $keepGeneratedPassword = false): void
     {
-        $this->reset(['studentId', 'userId', 'name', 'email', 'phone', 'admissionNumber', 'schoolClassId', 'sectionId', 'dateOfBirth']);
+        $this->reset(['studentId', 'userId', 'name', 'email', 'phone', 'admissionNumber', 'schoolClassId', 'sectionId', 'dateOfBirth', 'docStudentId', 'documents', 'documentTitle', 'documentFile']);
         $this->gender = 'male';
         if (! $keepGeneratedPassword) {
             $this->generatedPassword = null;

@@ -58,6 +58,9 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </button>
                         <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
                             <i class="fa-solid fa-pen"></i>
                         </button>
@@ -104,6 +107,9 @@
                         </td>
                         <td class="py-3 px-4 text-slate-600">{{ $student->user->email }}</td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
+                            <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                                <i class="fa-solid fa-file-lines"></i>
+                            </button>
                             <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
@@ -154,5 +160,28 @@
                 <button type="submit" class="btn-primary">Save</button>
             </div>
         </form>
+    </x-crud-modal>
+
+    <x-crud-modal :show="$showDocumentsModal" wireClose="closeDocumentsModal" title="Documents" maxWidth="lg">
+        <div class="space-y-4">
+            <ul class="divide-y divide-slate-100">
+                @forelse ($documents as $doc)
+                    <li class="py-2 flex justify-between items-center">
+                        <a href="{{ asset('storage/'.$doc->file_path) }}" target="_blank" class="text-indigo-600 hover:underline text-sm">
+                            {{ $doc->title }}
+                        </a>
+                        <button wire:click="deleteDocument({{ $doc->id }})" class="text-rose-500 text-xs">Delete</button>
+                    </li>
+                @empty
+                    <li class="py-2 text-sm text-slate-500">No documents uploaded.</li>
+                @endforelse
+            </ul>
+            
+            <form wire:submit="uploadDocument" class="border-t pt-4">
+                <x-floating-input label="Title" wire:model="documentTitle" />
+                <input type="file" wire:model="documentFile" class="mt-2 block w-full text-sm">
+                <button type="submit" class="btn-primary mt-3 w-full">Upload</button>
+            </form>
+        </div>
     </x-crud-modal>
 </div>

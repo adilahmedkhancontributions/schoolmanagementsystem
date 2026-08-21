@@ -72,6 +72,11 @@ class Student extends Model
         return $this->hasMany(FeeInvoice::class);
     }
 
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'documentable');
+    }
+
     public function examResults(): HasMany
     {
         return $this->hasMany(ExamResult::class);

@@ -27,6 +27,7 @@ class RolePermissionSeeder extends Seeder
             'manage grades',
             'manage staff',
             'mark staff attendance',
+            'manage documents',
             'view timetable',
             'view own attendance',
             'view own grades',
@@ -45,19 +46,19 @@ class RolePermissionSeeder extends Seeder
                 'manage teachers', 'manage students', 'manage classes', 'manage subjects',
                 'manage fees', 'manage exams', 'manage cms', 'manage announcements',
                 'view timetable', 'send messages', 'mark attendance', 'manage staff',
-                'mark staff attendance',
+                'mark staff attendance', 'manage documents',
             ],
             'teacher' => [
-                'mark attendance', 'manage grades', 'view timetable', 'send messages', 'view own attendance',
+                'mark attendance', 'manage grades', 'view timetable', 'send messages', 'view own attendance', 'manage documents',
             ],
             'student' => [
-                'view timetable', 'view own attendance', 'view own grades', 'view own fees',
+                'view timetable', 'view own attendance', 'view own grades', 'view own fees', 'manage documents',
             ],
             'parent' => [
-                'manage own children', 'view own attendance', 'view own grades', 'view own fees', 'send messages',
+                'manage own children', 'view own attendance', 'view own grades', 'view own fees', 'send messages', 'manage documents',
             ],
             'staff' => [
-                'view own attendance',
+                'view own attendance', 'manage documents',
             ],
         ];
 

@@ -39,4 +39,9 @@ class Staff extends Model
     {
         return $this->belongsTo(School::class);
     }
+
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'documentable');
+    }
 }
