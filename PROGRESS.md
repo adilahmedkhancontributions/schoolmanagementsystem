@@ -77,6 +77,7 @@ here instead of inventing a separate one.
 | 44 | Payroll Management | ❌ Not started (SRS: Phase 2) |
 | 45 | Inventory Management | ❌ Not started (SRS: Phase 2) |
 | 46 | School Store | ❌ Not started (SRS: Phase 2) |
+| 47 | Document Management System | ✅ Done (Students, Teachers, Staff) |
 | 49 | Visitor Management | ❌ Not started (SRS: Phase 2) |
 | 50 | Complaint Management | ❌ Not started (SRS: Phase 2) |
 | 51 | Discipline Management | ❌ Not started (SRS: Phase 2) |
