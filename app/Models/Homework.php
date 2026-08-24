@@ -12,6 +12,8 @@ class Homework extends Model
     use HasFactory;
     use \App\Support\Auditable;
 
+    protected $table = 'homeworks';
+
     protected $fillable = [
         'school_id',
         'school_class_id',
