@@ -1,5 +1,6 @@
 # School Management System — Scope & Progress Log
 ** main Prompt is in /projectprompt.md **
+** new requirement document The project manager supplied `/SoftwareRequirementsSpecification(SRS).txt` **
 This document is the single source of truth for what has been built, what is in
 progress, and what remains. Update it at the end of every work session.
 
@@ -43,7 +44,7 @@ here instead of inventing a separate one.
 | 8 | Multi-Campus Support | ❌ Not started — no `campuses` table; every school is currently single-campus |
 | 9 | School Configuration | 🟡 Partial — name/logo/colors/contact done; academic calendar, configurable grading system, configurable fee/attendance rules not done |
 | 10 | School Dashboard | 🟡 Partial — student/attendance/finance/academic metric cards exist; "Alerts" (low attendance, missing marks, pending approvals) not built |
-| 11 | Admissions Management | ❌ Not started — students are created directly by School Admin, no inquiry→interview→test→enrol pipeline or document uploads |
+| 11 | Admissions Management | ✅ Done this session (inquiry→interview→test→offer→enroll pipeline, document uploads, converts to a real Student account on enrollment) |
 | 12 | Student Management | 🟡 Partial — core profile + CRUD done; no father/mother name split, B-form/CNIC, medical info, or status lifecycle (Applicant/Active/Transferred/Withdrawn/Graduated/Suspended/Expelled) beyond implicit active |
 | 13 | Parent and Guardian Management | ✅ Done (guardian↔student pivot, child switcher) |
 | 14 | Academic Session Management | ❌ Not started — no `academic_sessions`/year-rollover/promotion workflow; classes/sections are not session-scoped |
@@ -63,7 +64,7 @@ here instead of inventing a separate one.
 | 28 | Result Management | 🟡 Partial — per-exam report card done; no transcripts/GPA/configurable grade scale |
 | 29 | Result Analytics | ✅ Done (folded into Reports → Exams) |
 | 30 | Report Card Builder | ❌ Not started — report card layout is fixed, not a per-school configurable template |
-| 31 | Homework Management | ❌ Not started |
+| 31 | Homework Management | ✅ Done this session (assign per class/subject, attachment, submissions + grading) |
 | 32 | Learning Management System | ❌ Not started |
 | 33 | Quiz System | ❌ Not started |
 | 34 | Parent Portal | ✅ Done |
@@ -103,7 +104,7 @@ here instead of inventing a separate one.
 | 71–74 | Non-functional (performance/scalability/availability/maintainability) | 🟡 Ongoing — Eloquent scoping + pagination in place; no caching/queue/index audit done yet |
 | 75 | Customization Architecture | 🟡 Partial — theming/branding configurable; grading/fee/result templates are not |
 | 76 | Subscription Architecture | ❌ Not started — no plans/billing/limits for the SaaS platform itself |
-| 77 | MVP Definition | See per-item mapping above — most of the 36 MVP items exist except Admissions, Staff, Staff Attendance, Homework/basic LMS, Data Import/Export |
+| 77 | MVP Definition | See per-item mapping above — all 36 MVP items exist except Data Import/Export |
 | 78–79 | Phase 2 / Phase 3 | Correctly still not started — out of scope until MVP gaps above are closed |
 | 80–89 | Architecture/strategy/process guidance | 📄 Docs only — informs future work, no direct deliverable |
 
@@ -881,6 +882,94 @@ No changes were needed to these files this session.
 - `app/Livewire/NotificationBell.php` + `resources/views/livewire/notification-bell.blade.php`
 - `resources/views/layouts/dashboard.blade.php` (bell embedded in the topbar for every role)
 
+## Phase 2/3 — Admissions Management (this session)
+
+| Item | Status |
+|---|---|
+| Admission inquiry intake form (applicant/father name, contact, DOB, address, class applying for, source) | ✅ Done |
+| Stage pipeline: interview scheduling + notes, entry test scheduling + score/notes, offer/reject decision with notes | ✅ Done |
+| Status lifecycle: inquiry → interview_scheduled → test_scheduled → offered → enrolled, or rejected/withdrawn at any point before enrollment | ✅ Done |
+| Document uploads per applicant (reuses the existing `documents` polymorphic table already used by Students/Teachers/Staff) | ✅ Done |
+| One-click "Enroll" on an offered applicant — creates the `User` (role `student`) + `Student` record from the application data and generates a one-time password, same pattern as Teacher/Student creation elsewhere | ✅ Done |
+| Search (name/father/phone/email) + status/class filters, School-Admin-only | ✅ Done |
+| Routes + nav wired (`school-admin.admissions`) | ✅ Done |
+
+### Notes / design choices (Admissions)
+
+- One `admissions` table carries the whole pipeline rather than separate tables per stage — interview/test/
+  decision fields are simply nullable columns on the same row (`interview_date`/`interview_notes`,
+  `test_date`/`test_score`/`test_notes`, `decision_notes`), matching the SRS's description of a single
+  applicant record moving through stages rather than being modeled as a state machine with history. No
+  separate audit-of-stage-changes table — the existing generic `Auditable` trait (already used by Student/
+  Teacher/FeeInvoice/etc.) is attached to `Admission` so create/update/delete events land in the shared
+  `audit_logs` table if a change history is ever needed.
+- `Admission::enroll()` (in `SchoolAdmin\Admissions\Manage`) is deliberately only reachable from the
+  `offered` status, and requires an email on file (validated inline, matches how Teacher/Student creation
+  requires an email since it becomes the login). It reuses the exact same "create User + assign role +
+  create profile + show one-time password banner" pattern as `Students\Manage::save()` rather than
+  inventing a new account-creation flow.
+- Documents reuse the pre-existing polymorphic `Document` model/table (already backing Students/Teachers/
+  Staff document uploads) with `documentable_type = Admission::class` — no new table needed.
+- No separate "Applicant" role/portal — admissions are staff-entered only (walk-in/phone/website inquiry
+  relayed to School Admin), consistent with there being no public-facing "apply online" form in this pass;
+  the CMS's existing `/s/{school}/pages/admissions` static page + contact form already cover the public-
+  facing side until a dedicated applicant-facing form is prioritized.
+
+### Files added/changed this session (Admissions)
+
+- `database/migrations/2026_08_21_120000_create_admissions_table.php`
+- `app/Models/Admission.php`
+- `app/Livewire/SchoolAdmin/Admissions/Manage.php` + `resources/views/livewire/school-admin/admissions/manage.blade.php`
+- `routes/web.php` (`school-admin.admissions`)
+- `app/Support/Navigation.php` (Admissions nav item for school_admin, listed first)
+- `database/seeders/DemoDataSeeder.php` (demo applicant "Ayesha Khan" at `interview_scheduled` stage)
+
+## Phase 2/3 — Homework Management (this session)
+
+| Item | Status |
+|---|---|
+| Teacher/School Admin: assign homework per class + subject (title, description, due date, optional max marks, optional file attachment) | ✅ Done |
+| Teacher/School Admin: submissions & grading modal per homework — view each student's submitted text/file, enter marks + feedback | ✅ Done |
+| Student/Parent: "Homework" list scoped to the student's class (parent has a child switcher) with status (Pending/Overdue/Submitted/Graded) | ✅ Done |
+| Student/Parent: submit/update a text answer and/or file attachment before or after the due date | ✅ Done |
+| Routes + nav wired for school-admin/teacher/student/parent | ✅ Done |
+
+### Notes / design choices (Homework)
+
+- Two tables: `homeworks` (one row per class+subject assignment — `teacher_id`
+  is copied from the subject's assigned teacher at save time, same pattern
+  as `TimetableEntry`/`ExamSubject` deriving `teacher_id` from `Subject`) and
+  `homework_submissions` (one row per student per homework, unique on
+  `(homework_id, student_id)` — `submitted_at` nullable so "not yet
+  submitted" is distinguishable from "submitted with no marks yet", matching
+  the `ExamResult` nullable-`marks_obtained` precedent).
+- `App\Livewire\Homework\Manage` is shared by Teacher and School Admin (same
+  `baseQuery()`/`when($teacher, ...)` scoping pattern as
+  `Exams\GradeEntry`/`Attendance\Mark`): a Teacher only sees/edits homework
+  for subjects they teach; School Admin sees every homework in the school.
+  Grading reuses the same "one form, `updateOrCreate` per student on submit"
+  pattern as `Exams\GradeEntry::save()`.
+- `App\Livewire\Homework\MyHomework` is shared by Student and Parent (same
+  studentId-guarded pattern as `MyAttendance`/`MyFees`/`ReportCard`) —
+  `assertOwnsStudent()` re-validates `studentId` against the caller's own/
+  children IDs before any submission write, same defensive pattern used
+  throughout the app.
+- File uploads (homework attachment, student submission file) use
+  `WithFileUploads` on the `public` disk (`homework-attachments/`,
+  `homework-submissions/`), same as every other upload in the app (school
+  logos, CMS images, documents) — no separate media library.
+- Both `Homework` and `HomeworkSubmission` use the `Auditable` trait, same
+  as Student/Teacher/FeeInvoice/etc.
+
+### Files added/changed this session (Homework)
+
+- `database/migrations/2026_08_22_00000{0,1}_create_homework{,​_submissions}_table.php`
+- `app/Models/{Homework,HomeworkSubmission}.php`
+- `app/Livewire/Homework/{Manage,MyHomework}.php` + `resources/views/livewire/homework/{manage,my-homework}.blade.php`
+- `routes/web.php` (`school-admin.homework`, `teacher.homework`, `student.homework`, `parent.homework`)
+- `app/Support/Navigation.php` (Homework nav item wired for school_admin/teacher/student/parent)
+- `database/seeders/DemoDataSeeder.php` (demo "Chapter 3 Exercises" homework + one submitted `HomeworkSubmission` for the demo student)
+
 ## Phase 5 — Polish & Deployment (NOT started)
 
 - i18n (multi-language, currency, timezone, academic calendar)
@@ -946,8 +1035,29 @@ No changes were needed to these files this session.
     it shows as "Scheduled" and doesn't appear in feeds yet). Then check
     `/teacher/announcements`, `/student/announcements`, and
     `/parent/announcements` all show the "everyone" one.
-11. Next: public CMS front page + admin CMS (WYSIWYG, media library, SEO,
-    scheduled publishing) is the largest remaining functional gap. Smaller
-    alternatives: real-time messaging (teacher↔parent), email/SMS delivery
-    of announcements, Super Admin cross-school analytics, or a charting
-    library for trend visualizations in Reports.
+11. Public CMS front page + admin CMS, teacher↔parent messaging, Staff/HR,
+    Leave Management, Fee Discounts/Defaulters, Timetable (+ change
+    requests/notifications), and Audit Logs were all completed in later
+    sessions — see their own headings above for details.
+12. Admissions Management (SRS §11) is now built — after migrating/seeding,
+    test as `admin@demoschool.test`: `/school-admin/admissions` (the demo
+    seed includes one applicant "Ayesha Khan" at the `interview_scheduled`
+    stage — open "Advance" to record a test score, "Make Offer", then
+    "Enroll" to confirm it creates a real Student login with a one-time
+    password banner, same as Students/Teachers).
+13. Homework Management (SRS §31, basic LMS scope) is now built — after
+    migrating/seeding, test as `admin@demoschool.test` or
+    `teacher@demoschool.test`: `/school-admin/homework` or
+    `/teacher/homework` (edit the demo "Chapter 3 Exercises" homework, open
+    the list-check icon to see the demo student's submitted text, enter
+    marks + feedback). Then check `/student/homework`
+    (`student@demoschool.test`, should show "Submitted" with the ability to
+    update it) and `/parent/homework` (`parent@demoschool.test`).
+14. Per the SRS §77 MVP list, the one remaining MVP gap is **Data
+    Import/Export** (bulk CSV import for students/staff/results; CSV export
+    currently only exists for Reports, not Students/Fees/Attendance/Results
+    directly) — build that next to close out the MVP definition. After
+    that, the largest non-MVP functional gaps are: Academic Session
+    Management (§14, year rollover/promotion), Multi-Campus Support (§8),
+    Report Card Builder (§30), Super Admin cross-school analytics (§56), and
+    a charting library for trend visualizations in Reports.

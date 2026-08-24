@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admission;
 use App\Models\Announcement;
 use App\Models\CmsPage;
 use App\Models\CmsPost;
@@ -12,6 +13,8 @@ use App\Models\ExamSubject;
 use App\Models\FeeInvoice;
 use App\Models\FeeStructure;
 use App\Models\Guardian;
+use App\Models\Homework;
+use App\Models\HomeworkSubmission;
 use App\Models\Message;
 use App\Models\School;
 use App\Models\SchoolClass;
@@ -130,6 +133,22 @@ class DemoDataSeeder extends Seeder
             $student->id => ['relationship' => 'father', 'is_primary' => true],
         ]);
 
+        Admission::firstOrCreate(
+            ['school_id' => $school->id, 'applicant_name' => 'Ayesha Khan'],
+            [
+                'father_name' => 'Imran Khan',
+                'phone' => '+1 555 0199',
+                'email' => 'ayesha.applicant@example.com',
+                'gender' => 'female',
+                'date_of_birth' => now()->subYears(10),
+                'school_class_id' => $class->id,
+                'source' => 'Website',
+                'status' => Admission::STATUS_INTERVIEW_SCHEDULED,
+                'interview_date' => now()->addDays(3),
+                'created_by' => $admin->id,
+            ]
+        );
+
         $tuitionFee = FeeStructure::firstOrCreate(
             ['school_id' => $school->id, 'school_class_id' => $class->id, 'name' => 'Monthly Tuition Fee'],
             ['amount' => 100, 'frequency' => 'monthly']
@@ -148,6 +167,16 @@ class DemoDataSeeder extends Seeder
         ExamSubject::firstOrCreate(
             ['exam_id' => $exam->id, 'subject_id' => $subject->id],
             ['max_marks' => 100, 'pass_marks' => 40]
+        );
+
+        $homework = Homework::firstOrCreate(
+            ['school_id' => $school->id, 'school_class_id' => $class->id, 'subject_id' => $subject->id, 'title' => 'Chapter 3 Exercises'],
+            ['teacher_id' => $subject->teacher_id, 'description' => 'Complete questions 1-10 at the end of Chapter 3.', 'due_date' => now()->addDays(5), 'max_marks' => 20]
+        );
+
+        HomeworkSubmission::firstOrCreate(
+            ['homework_id' => $homework->id, 'student_id' => $student->id],
+            ['submission_text' => 'Attached my answers.', 'submitted_at' => now()->subDay()]
         );
 
         Announcement::firstOrCreate(

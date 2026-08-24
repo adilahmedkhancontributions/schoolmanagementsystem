@@ -7,23 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Subject extends Model
+class Homework extends Model
 {
     use HasFactory;
+    use \App\Support\Auditable;
 
     protected $fillable = [
         'school_id',
         'school_class_id',
+        'subject_id',
         'teacher_id',
-        'name',
-        'code',
-        'is_elective',
+        'title',
+        'description',
+        'due_date',
+        'max_marks',
+        'attachment_path',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_elective' => 'boolean',
+            'due_date' => 'date',
+            'max_marks' => 'decimal:2',
         ];
     }
 
@@ -37,18 +42,23 @@ class Subject extends Model
         return $this->belongsTo(SchoolClass::class);
     }
 
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);
     }
 
-    public function examSubjects(): HasMany
+    public function submissions(): HasMany
     {
-        return $this->hasMany(ExamSubject::class);
+        return $this->hasMany(HomeworkSubmission::class);
     }
 
-    public function homeworks(): HasMany
+    public function attachmentUrl(): ?string
     {
-        return $this->hasMany(Homework::class);
+        return $this->attachment_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->attachment_path) : null;
     }
 }
