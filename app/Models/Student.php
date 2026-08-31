@@ -16,6 +16,7 @@ class Student extends Model
     protected $fillable = [
         'user_id',
         'school_id',
+        'campus_id',
         'school_class_id',
         'section_id',
         'admission_number',
@@ -23,6 +24,13 @@ class Student extends Model
         'date_of_birth',
         'gender',
         'blood_group',
+        'nationality',
+        'religion',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relation',
+        'medical_notes',
+        'notes',
         'address',
         'status',
     ];
@@ -38,6 +46,11 @@ class Student extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
     }
 
     public function school(): BelongsTo

@@ -95,6 +95,12 @@
         <form wire:submit="saveClass" class="space-y-4">
             <x-floating-input label="Class name (e.g. Grade 5)" name="className" wire:model="className" />
             <x-floating-input label="Sort order" name="sortOrder" type="number" wire:model="sortOrder" />
+            <x-floating-select label="Campus" name="classCampusId" wire:model="classCampusId">
+                <option value="">— None —</option>
+                @foreach ($campuses as $campus)
+                    <option value="{{ $campus->id }}">{{ $campus->name }}</option>
+                @endforeach
+            </x-floating-select>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" wire:click="closeClassModal" class="btn-secondary">Cancel</button>
                 <button type="submit" class="btn-primary">Save</button>

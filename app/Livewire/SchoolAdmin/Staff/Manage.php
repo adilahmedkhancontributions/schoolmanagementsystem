@@ -2,6 +2,7 @@
 
 namespace App\Livewire\SchoolAdmin\Staff;
 
+use App\Models\Campus;
 use App\Models\Staff;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -45,6 +46,8 @@ class Manage extends Component
 
     public string $employmentType = 'full_time';
 
+    public ?int $campusId = null;
+
     public ?string $generatedPassword = null;
 
     public function updatingSearch(): void
@@ -56,7 +59,7 @@ class Manage extends Component
     {
         $schoolId = auth()->user()->school_id;
 
-        $staffMembers = Staff::with('user')
+        $staffMembers = Staff::with(['user', 'campus'])
             ->where('school_id', $schoolId)
             ->whereHas('user', fn ($q) => $q->when(
                 $this->search,
@@ -67,6 +70,7 @@ class Manage extends Component
 
         return view('livewire.school-admin.staff.manage', [
             'staffMembers' => $staffMembers,
+            'campuses' => Campus::where('school_id', $schoolId)->orderBy('name')->get(),
         ]);
     }
 
@@ -89,6 +93,7 @@ class Manage extends Component
         $this->designation = $staff->designation;
         $this->department = (string) $staff->department;
         $this->employmentType = $staff->employment_type;
+        $this->campusId = $staff->campus_id;
         $this->showModal = true;
     }
 
@@ -102,6 +107,7 @@ class Manage extends Component
             'designation' => 'required|string|max:255',
             'department' => 'nullable|string|max:255',
             'employmentType' => 'required|in:full_time,part_time,contract',
+            'campusId' => 'nullable|exists:campuses,id',
         ]);
 
         $schoolId = auth()->user()->school_id;
@@ -118,6 +124,7 @@ class Manage extends Component
                 'designation' => $validated['designation'],
                 'department' => $validated['department'],
                 'employment_type' => $validated['employmentType'],
+                'campus_id' => $validated['campusId'] ?: null,
             ]);
         } else {
             $password = Str::password(12);
@@ -139,6 +146,7 @@ class Manage extends Component
                 'designation' => $validated['designation'],
                 'department' => $validated['department'],
                 'employment_type' => $validated['employmentType'],
+                'campus_id' => $validated['campusId'] ?: null,
                 'joining_date' => now(),
             ]);
 
@@ -225,7 +233,7 @@ class Manage extends Component
 
     private function resetForm(bool $keepGeneratedPassword = false): void
     {
-        $this->reset(['staffId', 'userId', 'name', 'email', 'phone', 'employeeId', 'designation', 'department', 'docStaffId', 'documents', 'documentTitle', 'documentFile']);
+        $this->reset(['staffId', 'userId', 'name', 'email', 'phone', 'employeeId', 'designation', 'department', 'campusId', 'docStaffId', 'documents', 'documentTitle', 'documentFile']);
         $this->employmentType = 'full_time';
         if (! $keepGeneratedPassword) {
             $this->generatedPassword = null;

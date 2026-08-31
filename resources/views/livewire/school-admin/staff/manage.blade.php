@@ -142,6 +142,12 @@
                     <option value="part_time">Part time</option>
                     <option value="contract">Contract</option>
                 </x-floating-select>
+                <x-floating-select label="Campus" name="campusId" wire:model="campusId">
+                    <option value="">— None —</option>
+                    @foreach ($campuses as $campus)
+                        <option value="{{ $campus->id }}">{{ $campus->name }}</option>
+                    @endforeach
+                </x-floating-select>
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" wire:click="closeModal" class="btn-secondary">Cancel</button>

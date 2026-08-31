@@ -35,21 +35,7 @@
                     @endif
                     <span class="font-heading font-bold text-lg tracking-tight truncate">{{ $school?->name ?? config('app.name', 'SMS') }}</span>
                 </div>
-                <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-                    @foreach (\App\Support\Navigation::forRole($role) as $item)
-                        @if ($item['route'] && \Illuminate\Support\Facades\Route::has($item['route']))
-                            <a href="{{ route($item['route']) }}" class="sidebar-link {{ request()->routeIs($item['route']) ? 'active' : '' }}">
-                                <i class="fa-solid {{ $item['icon'] }} w-5 text-center"></i>
-                                <span>{{ $item['label'] }}</span>
-                            </a>
-                        @else
-                            <span class="sidebar-link opacity-40 cursor-not-allowed" title="Coming soon">
-                                <i class="fa-solid {{ $item['icon'] }} w-5 text-center"></i>
-                                <span>{{ $item['label'] }}</span>
-                            </span>
-                        @endif
-                    @endforeach
-                </nav>
+                <x-sidebar-nav />
                 <div class="px-3 py-4 border-t border-white/10">
                     <span class="sidebar-link opacity-70">
                         <i class="fa-solid fa-shield-halved w-5 text-center"></i>
@@ -75,21 +61,7 @@
                             <i class="fa-solid fa-xmark text-xl"></i>
                         </button>
                     </div>
-                    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-                        @foreach (\App\Support\Navigation::forRole($role) as $item)
-                            @if ($item['route'] && \Illuminate\Support\Facades\Route::has($item['route']))
-                                <a href="{{ route($item['route']) }}" class="sidebar-link {{ request()->routeIs($item['route']) ? 'active' : '' }}">
-                                    <i class="fa-solid {{ $item['icon'] }} w-5 text-center"></i>
-                                    <span>{{ $item['label'] }}</span>
-                                </a>
-                            @else
-                                <span class="sidebar-link opacity-40 cursor-not-allowed">
-                                    <i class="fa-solid {{ $item['icon'] }} w-5 text-center"></i>
-                                    <span>{{ $item['label'] }}</span>
-                                </span>
-                            @endif
-                        @endforeach
-                    </nav>
+                    <x-sidebar-nav />
                 </aside>
             </div>
 
@@ -138,7 +110,7 @@
 
                 <!-- Mobile bottom nav -->
                 <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 flex">
-                    @foreach (array_slice(\App\Support\Navigation::forRole($role), 0, 5) as $item)
+                    @foreach (array_slice(\App\Support\Navigation::flattened($role), 0, 5) as $item)
                         @if ($item['route'] && \Illuminate\Support\Facades\Route::has($item['route']))
                             <a href="{{ route($item['route']) }}" class="bottom-nav-link {{ request()->routeIs($item['route']) ? 'active' : '' }}">
                                 <i class="fa-solid {{ $item['icon'] }} text-lg"></i>

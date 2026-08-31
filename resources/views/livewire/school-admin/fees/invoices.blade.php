@@ -191,7 +191,8 @@
             <div class="mb-4 rounded-lg bg-slate-50 p-4 text-sm">
                 <p class="font-medium text-slate-800">{{ $activeInvoice->student->user->name }} — {{ $activeInvoice->title }}</p>
                 <p class="text-slate-500 mt-1">
-                    Total {{ $currency }} {{ number_format($activeInvoice->amount, 2) }} &middot;
+                    Amount {{ $currency }} {{ number_format($activeInvoice->amount, 2) }} &middot;
+                    Discounts {{ $currency }} {{ number_format($activeInvoice->discountTotal(), 2) }} &middot;
                     Paid {{ $currency }} {{ number_format($activeInvoice->paid_amount, 2) }} &middot;
                     Balance {{ $currency }} {{ number_format($activeInvoice->balance(), 2) }}
                 </p>
@@ -216,6 +217,59 @@
                     </div>
                 </form>
             @endif
+
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Waivers / discounts</h4>
+                    <button type="button" wire:click="toggleDiscountForm" class="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                        <i class="fa-solid fa-plus"></i> {{ $showDiscountForm ? 'Cancel' : 'Add waiver' }}
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    @forelse ($activeInvoice->discounts as $discount)
+                        <div class="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm">
+                            <div>
+                                <p class="font-medium text-slate-800">-{{ $currency }} {{ number_format($discount->amountFor((string) $activeInvoice->amount), 2) }}</p>
+                                <p class="text-xs text-slate-500">{{ $discount->typeLabel() }} &middot; {{ $discount->is_percentage ? $discount->value.'%' : 'flat' }}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                @if ($discount->notes)
+                                    <p class="text-xs text-slate-400 max-w-[40%] truncate" title="{{ $discount->notes }}">{{ $discount->notes }}</p>
+                                @endif
+                                <button type="button" wire:click="removeDiscount({{ $discount->id }})" wire:confirm="Remove this waiver?" class="text-rose-500 hover:text-rose-700 text-xs" title="Remove waiver">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-sm text-slate-400">No waivers yet.</p>
+                    @endforelse
+                </div>
+
+                @if ($showDiscountForm)
+                    <form wire:submit="addDiscount" class="mt-3 rounded-lg bg-slate-50 p-4 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <x-floating-select label="Type" name="discountType" wire:model="discountType">
+                                <option value="custom">Custom</option>
+                                <option value="sibling">Sibling discount</option>
+                                <option value="scholarship">Scholarship</option>
+                                <option value="staff_child">Staff child</option>
+                                <option value="need_based">Need-based</option>
+                            </x-floating-select>
+                            <x-floating-input label="Value" name="discountValue" type="number" step="0.01" wire:model="discountValue" />
+                            <x-floating-input label="Notes (optional)" name="discountNotes" wire:model="discountNotes" />
+                        </div>
+                        <label class="inline-flex items-center gap-1.5 text-xs text-slate-600">
+                            <input type="checkbox" wire:model="discountIsPercentage" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            Apply as a percentage of the invoice amount
+                        </label>
+                        <div class="flex justify-end">
+                            <button type="submit" class="btn-primary">Apply Waiver</button>
+                        </div>
+                    </form>
+                @endif
+            </div>
 
             <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Payment history</h4>
             <div class="space-y-2 max-h-48 overflow-y-auto">

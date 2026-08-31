@@ -2,6 +2,7 @@
 
 namespace App\Livewire\SchoolAdmin\Students;
 
+use App\Models\Campus;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
@@ -26,6 +27,8 @@ class Manage extends Component
 
     public ?int $filterSectionId = null;
 
+    public ?int $filterCampusId = null;
+
     public bool $showModal = false;
     public bool $showDocumentsModal = false;
 
@@ -49,9 +52,27 @@ class Manage extends Component
 
     public ?int $sectionId = null;
 
+    public ?int $campusId = null;
+
     public string $gender = 'male';
 
     public string $dateOfBirth = '';
+
+    public string $bloodGroup = '';
+
+    public string $nationality = '';
+
+    public string $religion = '';
+
+    public string $emergencyContactName = '';
+
+    public string $emergencyContactPhone = '';
+
+    public string $emergencyContactRelation = '';
+
+    public string $medicalNotes = '';
+
+    public string $notes = '';
 
     public ?string $generatedPassword = null;
 
@@ -75,8 +96,9 @@ class Manage extends Component
     {
         $schoolId = auth()->user()->school_id;
 
-        $students = Student::with(['user', 'schoolClass', 'section'])
+        $students = Student::with(['user', 'schoolClass', 'section', 'campus'])
             ->where('school_id', $schoolId)
+            ->when($this->filterCampusId, fn ($q) => $q->where('campus_id', $this->filterCampusId))
             ->when($this->filterClassId, fn ($q) => $q->where('school_class_id', $this->filterClassId))
             ->when($this->filterSectionId, fn ($q) => $q->where('section_id', $this->filterSectionId))
             ->when($this->search, function ($q) {
@@ -92,6 +114,7 @@ class Manage extends Component
         return view('livewire.school-admin.students.manage', [
             'students' => $students,
             'classes' => SchoolClass::where('school_id', $schoolId)->orderBy('sort_order')->get(),
+            'campuses' => Campus::where('school_id', $schoolId)->orderBy('name')->get(),
             'sections' => $this->schoolClassId
                 ? Section::where('school_class_id', $this->schoolClassId)->get()
                 : collect(),
@@ -124,8 +147,17 @@ class Manage extends Component
         $this->admissionNumber = $student->admission_number;
         $this->schoolClassId = $student->school_class_id;
         $this->sectionId = $student->section_id;
+        $this->campusId = $student->campus_id;
         $this->gender = (string) $student->gender;
         $this->dateOfBirth = optional($student->date_of_birth)->format('Y-m-d') ?? '';
+        $this->bloodGroup = (string) $student->blood_group;
+        $this->nationality = (string) $student->nationality;
+        $this->religion = (string) $student->religion;
+        $this->emergencyContactName = (string) $student->emergency_contact_name;
+        $this->emergencyContactPhone = (string) $student->emergency_contact_phone;
+        $this->emergencyContactRelation = (string) $student->emergency_contact_relation;
+        $this->medicalNotes = (string) $student->medical_notes;
+        $this->notes = (string) $student->notes;
         $this->showModal = true;
     }
 
@@ -138,8 +170,17 @@ class Manage extends Component
             'admissionNumber' => ['required', 'string', 'max:50', Rule::unique('students', 'admission_number')->ignore($this->studentId)],
             'schoolClassId' => 'nullable|exists:school_classes,id',
             'sectionId' => 'nullable|exists:sections,id',
+            'campusId' => 'nullable|exists:campuses,id',
             'gender' => 'nullable|in:male,female,other',
             'dateOfBirth' => 'nullable|date',
+            'bloodGroup' => 'nullable|string|max:10',
+            'nationality' => 'nullable|string|max:80',
+            'religion' => 'nullable|string|max:80',
+            'emergencyContactName' => 'nullable|string|max:120',
+            'emergencyContactPhone' => 'nullable|string|max:40',
+            'emergencyContactRelation' => 'nullable|string|max:50',
+            'medicalNotes' => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:2000',
         ]);
 
         $schoolId = auth()->user()->school_id;
@@ -155,8 +196,17 @@ class Manage extends Component
                 'admission_number' => $validated['admissionNumber'],
                 'school_class_id' => $validated['schoolClassId'] ?: null,
                 'section_id' => $validated['sectionId'] ?: null,
+                'campus_id' => $validated['campusId'] ?: null,
                 'gender' => $validated['gender'] ?: null,
                 'date_of_birth' => $validated['dateOfBirth'] ?: null,
+                'blood_group' => $validated['bloodGroup'] ?: null,
+                'nationality' => $validated['nationality'] ?: null,
+                'religion' => $validated['religion'] ?: null,
+                'emergency_contact_name' => $validated['emergencyContactName'] ?: null,
+                'emergency_contact_phone' => $validated['emergencyContactPhone'] ?: null,
+                'emergency_contact_relation' => $validated['emergencyContactRelation'] ?: null,
+                'medical_notes' => $validated['medicalNotes'] ?: null,
+                'notes' => $validated['notes'] ?: null,
             ]);
         } else {
             $password = Str::password(12);
@@ -176,10 +226,19 @@ class Manage extends Component
                 'school_id' => $schoolId,
                 'school_class_id' => $validated['schoolClassId'] ?: null,
                 'section_id' => $validated['sectionId'] ?: null,
+                'campus_id' => $validated['campusId'] ?: null,
                 'admission_number' => $validated['admissionNumber'],
                 'admission_date' => now(),
                 'gender' => $validated['gender'] ?: null,
                 'date_of_birth' => $validated['dateOfBirth'] ?: null,
+                'blood_group' => $validated['bloodGroup'] ?: null,
+                'nationality' => $validated['nationality'] ?: null,
+                'religion' => $validated['religion'] ?: null,
+                'emergency_contact_name' => $validated['emergencyContactName'] ?: null,
+                'emergency_contact_phone' => $validated['emergencyContactPhone'] ?: null,
+                'emergency_contact_relation' => $validated['emergencyContactRelation'] ?: null,
+                'medical_notes' => $validated['medicalNotes'] ?: null,
+                'notes' => $validated['notes'] ?: null,
                 'status' => 'active',
             ]);
 
@@ -266,7 +325,7 @@ class Manage extends Component
 
     private function resetForm(bool $keepGeneratedPassword = false): void
     {
-        $this->reset(['studentId', 'userId', 'name', 'email', 'phone', 'admissionNumber', 'schoolClassId', 'sectionId', 'dateOfBirth', 'docStudentId', 'documents', 'documentTitle', 'documentFile']);
+        $this->reset(['studentId', 'userId', 'name', 'email', 'phone', 'admissionNumber', 'schoolClassId', 'sectionId', 'campusId', 'dateOfBirth', 'bloodGroup', 'nationality', 'religion', 'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation', 'medicalNotes', 'notes', 'docStudentId', 'documents', 'documentTitle', 'documentFile']);
         $this->gender = 'male';
         if (! $keepGeneratedPassword) {
             $this->generatedPassword = null;

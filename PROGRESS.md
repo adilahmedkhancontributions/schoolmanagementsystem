@@ -41,11 +41,11 @@ here instead of inventing a separate one.
 | 1–5 | Purpose/Vision/Objectives/Users/Stakeholders | 📄 Docs only (product framing, no direct code) |
 | 6 | User Role and Permission System | ✅ Done (Spatie roles: super_admin/school_admin/teacher/student/parent) — ⚠️ SRS wants finer-grained configurable permissions (view/create/edit/delete/approve/export/print/manage/configure) per role beyond Spatie's default permission list; not built |
 | 7 | Multi-School Architecture | ✅ Done (single DB, `school_id` scoping) |
-| 8 | Multi-Campus Support | ❌ Not started — no `campuses` table; every school is currently single-campus |
+| 8 | Multi-Campus Support | 🟡 Partial — `campuses` table + `campus_id` on classes/students/teachers/staff with model relations; School Admin campus CRUD (create/edit/set-default/enable+disable, delete-guard on default); "Main Campus" seeded and bound to demo classes/teachers/staff/students; campus selector on Student/Teacher/Class/Staff forms + campus filter on the Student list; sections are not yet campus-scoped |
 | 9 | School Configuration | 🟡 Partial — name/logo/colors/contact done; academic calendar, configurable grading system, configurable fee/attendance rules not done |
 | 10 | School Dashboard | 🟡 Partial — student/attendance/finance/academic metric cards exist; "Alerts" (low attendance, missing marks, pending approvals) not built |
 | 11 | Admissions Management | ✅ Done this session (inquiry→interview→test→offer→enroll pipeline, document uploads, converts to a real Student account on enrollment) |
-| 12 | Student Management | 🟡 Partial — core profile + CRUD done; no father/mother name split, B-form/CNIC, medical info, or status lifecycle (Applicant/Active/Transferred/Withdrawn/Graduated/Suspended/Expelled) beyond implicit active |
+| 12 | Student Management | 🟡 Partial — core profile + CRUD done; this session added blood group, nationality, religion, emergency contact (name/phone/relation), medical notes and student notes surfaced in the form/list; still no father/mother name split, B-form/CNIC, or explicit status lifecycle (Applicant/Active/Transferred/Withdrawn/Graduated/Suspended/Expelled) beyond implicit active |
 | 13 | Parent and Guardian Management | ✅ Done (guardian↔student pivot, child switcher) |
 | 14 | Academic Session Management | ❌ Not started — no `academic_sessions`/year-rollover/promotion workflow; classes/sections are not session-scoped |
 | 15 | Classes, Sections and Subjects | ✅ Done |
@@ -75,7 +75,7 @@ here instead of inventing a separate one.
 | 40 | Events and Calendar | ❌ Not started |
 | 41 | Library Management | ❌ Not started (SRS: Phase 2) |
 | 43 | HR Management | ❌ Not started (SRS: Phase 2) |
-| 44 | Payroll Management | ❌ Not started (SRS: Phase 2) |
+| 44 | Payroll Management | ✅ Done this session — `salary_structures` (payable polymorph: Teacher\|Staff; basic/house/transport/other allowances, deduction, effective_from) + `payslips` (period YYYY-MM, gross/net, bonus/deduction, status draft\|paid, paid_at/method/reference) with morph relations; School Admin screens for salary structures + monthly payroll generation (from active structures) and per-slip bonus/deduction with mark-paid/revert/delete; shared Teacher/Staff "My Pay" portal |
 | 45 | Inventory Management | ❌ Not started (SRS: Phase 2) |
 | 46 | School Store | ❌ Not started (SRS: Phase 2) |
 | 47 | Document Management System | ✅ Done (Students, Teachers, Staff) |
@@ -1044,10 +1044,90 @@ and added data-reading affordances (result counts, tooltips, submission counts).
    seeded with demo data.
 4. Future improvements (non-MVP):
    - Academic Session Management (§14, year rollover/promotion workflow)
-   - Multi-Campus Support (§8)
+   - Complete Multi-Campus (§8: campus-scope sections + filtering across all lists/reports)
    - Report Card Builder with configurable templates (§30)
    - Super Admin cross-school analytics dashboard (§56)
    - Charting library for trend visualizations in Reports
    - PDF export for report cards and certificates
    - Payment gateway integration (Stripe/Razorpay/PayPal)
    - SMS/WhatsApp delivery for notifications
+
+## "All-in-One ERP" Polish Pass (this session)
+
+Pushed toward the "best-in-class all-in-one ERP" vision selected earlier
+(grouped navigation, Finance/Payroll module, multi-campus, richer student
+details, and an improvement pass). Also fixed a hidden seed bug it surfaced.
+
+### Grouped & collapsible sidebar navigation
+- Rewrote `app/Support/Navigation.php` to return **grouped** menus
+  (`['label','icon','items']`) per role — e.g. admin gets Overview /
+  Academic / Operations / Finance / People & Content / System groups.
+  Added `flattened()` (for the mobile bottom nav + dashboard quick links) and
+  `roleLabel()`.
+- New `resources/views/components/sidebar-nav.blade.php`: collapsible groups
+  (`x-data` open-map, chevron toggles), active-group highlight via route
+  prefix, disabled "coming soon" items. `layouts/dashboard.blade.php`
+  desktop + mobile sidebars now use `<x-sidebar-nav />`; the mobile bottom
+  nav uses `flattened()`. `app/Livewire/Dashboard.php` quickLinks use
+  `flattened()` too. Added `.group-label` CSS.
+
+### Multi-campus support (§8) — partial
+- `campuses` table + `campus_id` added to `school_classes`, `students`,
+  `teachers`, `staff` (`Campuses` migration batch). `Campus` model + `campuses()`
+  on `School`; `campus()` on class/student/teacher/staff; `campus_id`
+  fillables added.
+- `SchoolAdmin\Campuses\Manage` CRUD: gradient header, create/edit modal,
+  set-as-default, enable/disable, delete guard against the default campus.
+- Campus selector surfaced on Student, Teacher, Class and Staff create/edit
+  forms; Student list gets a campus filter + campus column/card detail.
+
+### Finance / Payroll module (§44) — new
+- `salary_structures` (payable polymorph `Teacher`|`Staff`, allowances,
+  deduction, `effective_from`) + `payslips` (period `YYYY-MM`, gross/net,
+  bonus, deduction, `draft`|`paid`, paid-at/method/reference) tables.
+- `SalaryStructure` (gross()/net()) and `Payslip` (gross()/periodLabel())
+  models; morph `salaryStructure()`/`payslips()` on `Teacher` + `Staff`.
+- Screens: `SalaryStructures` (CRUD), `Payroll` (generate payslips from
+  active structures, per-slip bonus/deduction, mark-paid / revert / delete),
+  shared `Finance\MyPayslips` for teacher+staff ("My Pay").
+
+### Richer student details (§12)
+- `students` gained blood group, nationality, religion, emergency contact
+  (name/phone/relation), medical notes, general notes — surfaced in the
+  Students create/edit form in grouped sections and seeded with demo data.
+
+### Fee enrichment (discounts/waivers)
+- Wired the existing-but-unused `FeeDiscount` model into the invoice flow:
+  the "Record Payment" modal is now an invoice-details modal showing
+  Waivers/Discounts (type, `%` or flat, notes, remove) plus a live
+  amount/discounts/paid/balance summary. Adding/removing a waiver
+  re-runs `refreshStatus()` so `paid/partial/unpaid` and balances stay in
+  sync with net (post-discount) amounts.
+
+### Demo data & verification
+- Seeder already produced campuses, fee structures/invoices/payments/9
+  discounts (verified). Payroll structures/payslips start empty by design
+  (generated on demand).
+- `migrate:fresh --seed` passes end-to-end; `php -l` clean across every
+  touched PHP file; `view:cache` clean across every new/edited Blade.
+
+### Bug fix (surfaced by this pass)
+- None new this session beyond the earlier homework-FK fix already logged;
+  the campus/finance migrations ran in a fresh batch and the whole seed
+  completes.
+
+### Files added/changed this session
+- `app/Support/Navigation.php`, `resources/views/components/sidebar-nav.blade.php`,
+  `resources/views/layouts/dashboard.blade.php`, `app/Livewire/Dashboard.php`
+- `database/migrations/2026_09_01_00000{1,2,3,4,5}_*.php` (campuses,
+  campus_id, rich student fields, salary_structures, payslips)
+- `app/Models/{Campus,SalaryStructure,Payslip}.php`; relations/fillables on
+  `School`, `SchoolClass`, `Student`, `Teacher`, `Staff`
+- `app/Livewire/SchoolAdmin/Campuses/Manage.php`,
+  `app/Livewire/SchoolAdmin/Finance/{SalaryStructures,Payroll}.php`,
+  `app/Livewire/Finance/MyPayslips.php` + their Blade views
+- `app/Livewire/SchoolAdmin/{Students,Teachers,Staff,Classes}/Manage.php`
+  + their views (campus + rich fields)
+- `app/Livewire/SchoolAdmin/Fees/Invoices.php` + `fees/invoices.blade.php`
+  (waivers/discounts)
+- `routes/web.php` (5 new routes), `database/seeders/DemoDataSeeder.php`

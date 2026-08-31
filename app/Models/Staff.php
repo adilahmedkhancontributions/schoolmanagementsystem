@@ -16,6 +16,7 @@ class Staff extends Model
     protected $fillable = [
         'user_id',
         'school_id',
+        'campus_id',
         'employee_id',
         'designation',
         'department',
@@ -35,6 +36,11 @@ class Staff extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
@@ -43,5 +49,15 @@ class Staff extends Model
     public function documents()
     {
         return $this->morphMany(Document::class, 'documentable');
+    }
+
+    public function salaryStructure()
+    {
+        return $this->morphOne(SalaryStructure::class, 'payable');
+    }
+
+    public function payslips()
+    {
+        return $this->morphMany(Payslip::class, 'payable');
     }
 }

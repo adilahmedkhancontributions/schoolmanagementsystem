@@ -2,6 +2,7 @@
 
 namespace App\Livewire\SchoolAdmin\Fees;
 
+use App\Models\FeeDiscount;
 use App\Models\FeeInvoice;
 use App\Models\FeePayment;
 use App\Models\FeeStructure;
@@ -49,6 +50,16 @@ class Invoices extends Component
 
     public string $paymentNotes = '';
 
+    public bool $showDiscountForm = false;
+
+    public string $discountType = 'custom';
+
+    public bool $discountIsPercentage = false;
+
+    public string $discountValue = '';
+
+    public string $discountNotes = '';
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -90,7 +101,7 @@ class Invoices extends Component
                 ? Student::with('user')->where('school_class_id', $this->generateClassId)->where('school_id', $schoolId)->get()
                 : collect(),
             'activeInvoice' => $this->activeInvoiceId
-                ? FeeInvoice::with(['student.user', 'payments' => fn ($q) => $q->orderByDesc('paid_at')])->find($this->activeInvoiceId)
+                ? FeeInvoice::with(['student.user', 'payments' => fn ($q) => $q->orderByDesc('paid_at'), 'discounts.createdBy'])->find($this->activeInvoiceId)
                 : null,
         ]);
     }
@@ -187,6 +198,7 @@ class Invoices extends Component
         $this->paymentMethod = 'cash';
         $this->paymentDate = now()->format('Y-m-d');
         $this->paymentNotes = '';
+        $this->showDiscountForm = false;
         $this->showPaymentModal = true;
     }
 
@@ -194,6 +206,7 @@ class Invoices extends Component
     {
         $this->showPaymentModal = false;
         $this->activeInvoiceId = null;
+        $this->reset(['showDiscountForm', 'discountType', 'discountIsPercentage', 'discountValue', 'discountNotes']);
         $this->resetErrorBag();
     }
 
@@ -222,6 +235,54 @@ class Invoices extends Component
 
         $this->paymentAmount = '';
         $this->paymentNotes = '';
+    }
+
+    public function toggleDiscountForm(): void
+    {
+        $this->showDiscountForm = ! $this->showDiscountForm;
+        $this->reset(['discountType', 'discountIsPercentage', 'discountValue', 'discountNotes']);
+        $this->resetErrorBag();
+    }
+
+    public function addDiscount(): void
+    {
+        $invoice = FeeInvoice::where('school_id', auth()->user()->school_id)->findOrFail($this->activeInvoiceId);
+
+        $validated = $this->validate([
+            'discountType' => 'required|in:sibling,scholarship,staff_child,need_based,custom',
+            'discountValue' => ['required', 'numeric', 'gt:0'],
+            'discountNotes' => 'nullable|string|max:255',
+        ]);
+
+        if ($this->discountIsPercentage) {
+            $this->validate(['discountValue' => ['required', 'numeric', 'gt:0', 'lte:100']]);
+        } elseif (bccomp((string) $this->discountValue, (string) $invoice->balance(), 2) > 0) {
+            $this->addError('discountValue', 'A fixed discount cannot exceed the invoice balance.');
+
+            return;
+        }
+
+        FeeDiscount::create([
+            'fee_invoice_id' => $invoice->id,
+            'type' => $validated['discountType'],
+            'is_percentage' => $this->discountIsPercentage,
+            'value' => $validated['discountValue'],
+            'notes' => $validated['discountNotes'] ?: null,
+            'created_by' => auth()->id(),
+        ]);
+
+        $this->showDiscountForm = false;
+        $this->reset(['discountType', 'discountIsPercentage', 'discountValue', 'discountNotes']);
+        $this->resetErrorBag();
+    }
+
+    public function removeDiscount(int $discountId): void
+    {
+        $invoice = FeeInvoice::where('school_id', auth()->user()->school_id)->findOrFail($this->activeInvoiceId);
+
+        $discount = FeeDiscount::where('fee_invoice_id', $invoice->id)->findOrFail($discountId);
+        $discount->delete();
+        $invoice->refreshStatus();
     }
 
     public function deleteInvoice(int $id): void

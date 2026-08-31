@@ -15,6 +15,7 @@ class SchoolClass extends Model
 
     protected $fillable = [
         'school_id',
+        'campus_id',
         'name',
         'sort_order',
     ];
@@ -22,6 +23,11 @@ class SchoolClass extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
     }
 
     public function sections(): HasMany

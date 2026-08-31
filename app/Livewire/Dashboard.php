@@ -20,7 +20,7 @@ class Dashboard extends Component
         $user = auth()->user();
         $role = $user->getRoleNames()->first();
 
-        $quickLinks = collect(\App\Support\Navigation::forRole($role))
+        $quickLinks = collect(\App\Support\Navigation::flattened($role))
             ->filter(fn ($item) => $item['route'] && $item['route'] !== 'dashboard' && \Illuminate\Support\Facades\Route::has($item['route']))
             ->values();
 

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Admission;
 use App\Models\Announcement;
 use App\Models\Attendance;
+use App\Models\Campus;
 use App\Models\CmsPage;
 use App\Models\CmsPost;
 use App\Models\ContactMessage;
@@ -73,12 +74,24 @@ class DemoDataSeeder extends Seeder
         );
         $admin->assignRole('school_admin');
 
+        // ---- Campuses ----
+        $campus = Campus::firstOrCreate(
+            ['school_id' => $school->id, 'name' => 'Main Campus'],
+            [
+                'code' => 'MC',
+                'address' => '123 School Road',
+                'city' => 'Demo City',
+                'is_default' => true,
+                'status' => 'active',
+            ]
+        );
+
         // ---- Classes & sections ----
         $classes = collect();
         foreach (['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'] as $i => $name) {
             $classes[$name] = SchoolClass::firstOrCreate(
                 ['school_id' => $school->id, 'name' => $name],
-                ['sort_order' => $i + 1]
+                ['sort_order' => $i + 1, 'campus_id' => $campus->id]
             );
         }
         $class = $classes['Grade 5'];
@@ -111,6 +124,7 @@ class DemoDataSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'school_id' => $school->id,
+                    'campus_id' => $campus->id,
                     'employee_id' => sprintf('EMP-%04d', $i + 1),
                     'employment_type' => 'full_time',
                     'joining_date' => now()->subYears(random_int(1, 10)),
@@ -170,6 +184,7 @@ class DemoDataSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'school_id' => $school->id,
+                    'campus_id' => $campus->id,
                     'employee_id' => sprintf('STF-%04d', $i + 1),
                     'designation' => $def['designation'],
                     'department' => $def['department'],
@@ -197,23 +212,32 @@ class DemoDataSeeder extends Seeder
                 );
                 $studentUser->assignRole('student');
 
+                $guardianEmail = $isDemoSlot ? 'parent@demoschool.test' : sprintf('guardian%03d@demoschool.test', $counter);
+                $guardianName = $isDemoSlot ? 'Demo Parent' : $lastNames[($counter * 5) % count($lastNames)].' Family';
+
                 $studentModel = Student::firstOrCreate(
                     ['user_id' => $studentUser->id],
                     [
                         'school_id' => $school->id,
+                        'campus_id' => $campus->id,
                         'school_class_id' => $sec->school_class_id,
                         'section_id' => $sec->id,
                         'admission_number' => sprintf('ADM-%04d', $counter),
                         'admission_date' => now()->subMonths(random_int(1, 24)),
                         'date_of_birth' => now()->subYears(random_int(6, 15))->subDays(random_int(0, 300)),
                         'gender' => $counter % 2 === 0 ? 'female' : 'male',
+                        'blood_group' => ['A+', 'B+', 'O+', 'AB-'][$counter % 4],
+                        'nationality' => 'United States',
+                        'religion' => '—',
+                        'emergency_contact_name' => $guardianName,
+                        'emergency_contact_phone' => '+1 555 010'.$counter % 10,
+                        'emergency_contact_relation' => 'Parent',
+                        'medical_notes' => $counter % 5 === 0 ? 'Allergic to peanuts.' : null,
                         'status' => 'active',
                     ]
                 );
                 $students[$sectionKey.'-'.$i] = $studentModel;
 
-                $guardianEmail = $isDemoSlot ? 'parent@demoschool.test' : sprintf('guardian%03d@demoschool.test', $counter);
-                $guardianName = $isDemoSlot ? 'Demo Parent' : $lastNames[($counter * 5) % count($lastNames)].' Family';
                 $guardianUser = User::firstOrCreate(
                     ['email' => $guardianEmail],
                     ['name' => $guardianName, 'password' => 'password', 'school_id' => $school->id, 'status' => 'active']

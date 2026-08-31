@@ -2,6 +2,7 @@
 
 namespace App\Livewire\SchoolAdmin\Teachers;
 
+use App\Models\Campus;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -45,6 +46,8 @@ class Manage extends Component
 
     public string $employmentType = 'full_time';
 
+    public ?int $campusId = null;
+
     public ?string $generatedPassword = null;
 
     public function updatingSearch(): void
@@ -56,7 +59,7 @@ class Manage extends Component
     {
         $schoolId = auth()->user()->school_id;
 
-        $teachers = Teacher::with('user')
+        $teachers = Teacher::with(['user', 'campus'])
             ->where('school_id', $schoolId)
             ->whereHas('user', fn ($q) => $q->when(
                 $this->search,
@@ -67,6 +70,7 @@ class Manage extends Component
 
         return view('livewire.school-admin.teachers.manage', [
             'teachers' => $teachers,
+            'campuses' => Campus::where('school_id', $schoolId)->orderBy('name')->get(),
         ]);
     }
 
@@ -89,6 +93,7 @@ class Manage extends Component
         $this->qualification = (string) $teacher->qualification;
         $this->specialization = (string) $teacher->specialization;
         $this->employmentType = $teacher->employment_type;
+        $this->campusId = $teacher->campus_id;
         $this->showModal = true;
     }
 
@@ -102,6 +107,7 @@ class Manage extends Component
             'qualification' => 'nullable|string|max:255',
             'specialization' => 'nullable|string|max:255',
             'employmentType' => 'required|in:full_time,part_time,contract',
+            'campusId' => 'nullable|exists:campuses,id',
         ]);
 
         $schoolId = auth()->user()->school_id;
@@ -118,6 +124,7 @@ class Manage extends Component
                 'qualification' => $validated['qualification'],
                 'specialization' => $validated['specialization'],
                 'employment_type' => $validated['employmentType'],
+                'campus_id' => $validated['campusId'] ?: null,
             ]);
         } else {
             $password = Str::password(12);
@@ -139,6 +146,7 @@ class Manage extends Component
                 'qualification' => $validated['qualification'],
                 'specialization' => $validated['specialization'],
                 'employment_type' => $validated['employmentType'],
+                'campus_id' => $validated['campusId'] ?: null,
                 'joining_date' => now(),
             ]);
 
@@ -225,7 +233,7 @@ class Manage extends Component
 
     private function resetForm(bool $keepGeneratedPassword = false): void
     {
-        $this->reset(['teacherId', 'userId', 'name', 'email', 'phone', 'employeeId', 'qualification', 'specialization', 'docTeacherId', 'documents', 'documentTitle', 'documentFile']);
+        $this->reset(['teacherId', 'userId', 'name', 'email', 'phone', 'employeeId', 'qualification', 'specialization', 'campusId', 'docTeacherId', 'documents', 'documentTitle', 'documentFile']);
         $this->employmentType = 'full_time';
         if (! $keepGeneratedPassword) {
             $this->generatedPassword = null;

@@ -91,4 +91,9 @@ class School extends Model
     {
         return $this->hasMany(Student::class);
     }
+
+    public function campuses(): HasMany
+    {
+        return $this->hasMany(Campus::class);
+    }
 }

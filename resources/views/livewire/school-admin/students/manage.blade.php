@@ -35,6 +35,13 @@
             <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name, email or admission no..."
                    class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
 
+            <select wire:model.live="filterCampusId" class="min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+                <option value="">All campuses</option>
+                @foreach ($campuses as $campus)
+                    <option value="{{ $campus->id }}">{{ $campus->name }}</option>
+                @endforeach
+            </select>
+
             <select wire:model.live="filterClassId" class="min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
                 <option value="">All classes</option>
                 @foreach ($classes as $class)
@@ -94,6 +101,10 @@
                         <dt class="text-slate-400">Class / Section</dt>
                         <dd class="text-slate-700 font-medium mt-0.5">{{ $student->schoolClass?->name ?? '—' }}{{ $student->section ? ' / '.$student->section->name : '' }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-slate-400">Campus</dt>
+                        <dd class="text-slate-700 font-medium mt-0.5">{{ $student->campus?->name ?? '—' }}</dd>
+                    </div>
                     @if ($student->user->phone)
                         <div class="col-span-2">
                             <dt class="text-slate-400">Phone</dt>
@@ -115,6 +126,7 @@
                     <th class="py-3 px-4">Name</th>
                     <th class="py-3 px-4">Admission No.</th>
                     <th class="py-3 px-4">Class / Section</th>
+                    <th class="py-3 px-4">Campus</th>
                     <th class="py-3 px-4">Email</th>
                     <th class="py-3 px-4"></th>
                 </tr>
@@ -127,6 +139,7 @@
                         <td class="py-3 px-4 text-slate-600">
                             {{ $student->schoolClass?->name ?? '—' }}{{ $student->section ? ' / '.$student->section->name : '' }}
                         </td>
+                        <td class="py-3 px-4 text-slate-600">{{ $student->campus?->name ?? '—' }}</td>
                         <td class="py-3 px-4 text-slate-600">{{ $student->user->email }}</td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
                             <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
@@ -142,7 +155,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="py-10 text-center text-slate-500">No students yet.</td>
+                        <td colspan="6" class="py-10 text-center text-slate-500">No students yet.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -152,31 +165,71 @@
     <div class="mt-4">{{ $students->links() }}</div>
 
     <x-crud-modal :show="$showModal" wireClose="closeModal" :title="$studentId ? 'Edit Student' : 'Add Student'" maxWidth="xl">
-        <form wire:submit="save" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <x-floating-input label="Full name" name="name" wire:model="name" />
-                <x-floating-input label="Email" name="email" type="email" wire:model="email" />
-                <x-floating-input label="Phone" name="phone" wire:model="phone" />
-                <x-floating-input label="Admission number" name="admissionNumber" wire:model="admissionNumber" />
-                <x-floating-input label="Date of birth" name="dateOfBirth" type="date" wire:model="dateOfBirth" />
-                <x-floating-select label="Gender" name="gender" wire:model="gender">
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                </x-floating-select>
-                <x-floating-select label="Class" name="schoolClassId" wire:model.live="schoolClassId">
-                    <option value="">— None —</option>
-                    @foreach ($classes as $class)
-                        <option value="{{ $class->id }}">{{ $class->name }}</option>
-                    @endforeach
-                </x-floating-select>
-                <x-floating-select label="Section" name="sectionId" wire:model="sectionId">
-                    <option value="">— None —</option>
-                    @foreach ($sections as $section)
-                        <option value="{{ $section->id }}">{{ $section->name }}</option>
-                    @endforeach
-                </x-floating-select>
+        <form wire:submit="save" class="space-y-5">
+            <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Account & Enrolment</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <x-floating-input label="Full name" name="name" wire:model="name" />
+                    <x-floating-input label="Email" name="email" type="email" wire:model="email" />
+                    <x-floating-input label="Phone" name="phone" wire:model="phone" />
+                    <x-floating-input label="Admission number" name="admissionNumber" wire:model="admissionNumber" />
+                    <x-floating-select label="Campus" name="campusId" wire:model="campusId">
+                        <option value="">— None —</option>
+                        @foreach ($campuses as $campus)
+                            <option value="{{ $campus->id }}">{{ $campus->name }}</option>
+                        @endforeach
+                    </x-floating-select>
+                    <x-floating-select label="Class" name="schoolClassId" wire:model.live="schoolClassId">
+                        <option value="">— None —</option>
+                        @foreach ($classes as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        @endforeach
+                    </x-floating-select>
+                    <x-floating-select label="Section" name="sectionId" wire:model="sectionId">
+                        <option value="">— None —</option>
+                        @foreach ($sections as $section)
+                            <option value="{{ $section->id }}">{{ $section->name }}</option>
+                        @endforeach
+                    </x-floating-select>
+                </div>
             </div>
+
+            <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Personal & Demographics</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <x-floating-input label="Date of birth" name="dateOfBirth" type="date" wire:model="dateOfBirth" />
+                    <x-floating-select label="Gender" name="gender" wire:model="gender">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </x-floating-select>
+                    <x-floating-input label="Blood group" name="bloodGroup" wire:model="bloodGroup" />
+                    <x-floating-input label="Nationality" name="nationality" wire:model="nationality" />
+                    <x-floating-input label="Religion" name="religion" wire:model="religion" />
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Emergency Contact</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <x-floating-input label="Contact name" name="emergencyContactName" wire:model="emergencyContactName" />
+                    <x-floating-input label="Contact phone" name="emergencyContactPhone" wire:model="emergencyContactPhone" />
+                    <x-floating-select label="Relation" name="emergencyContactRelation" wire:model="emergencyContactRelation">
+                        <option value="">— Choose —</option>
+                        <option>Parent</option>
+                        <option>Guardian</option>
+                        <option>Sibling</option>
+                        <option>Other</option>
+                    </x-floating-select>
+                    <x-floating-input label="Medical notes (allergies, conditions)" name="medicalNotes" wire:model="medicalNotes" />
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Notes</h3>
+                <textarea wire:model="notes" rows="2" placeholder="Notes about the student (optional)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"></textarea>
+            </div>
+
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" wire:click="closeModal" class="btn-secondary">Cancel</button>
                 <button type="submit" class="btn-primary">Save</button>

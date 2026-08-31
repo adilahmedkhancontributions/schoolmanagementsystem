@@ -72,6 +72,8 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/settings', SchoolProfile::class)->name('settings');
         Route::get('/fees/structures', ManageFeeStructures::class)->name('fees.structures');
         Route::get('/fees/invoices', ManageFeeInvoices::class)->name('fees.invoices');
+        Route::get('/finance/salary-structures', \App\Livewire\SchoolAdmin\Finance\SalaryStructures::class)->name('finance.salary-structures');
+        Route::get('/finance/payroll', \App\Livewire\SchoolAdmin\Finance\Payroll::class)->name('finance.payroll');
         Route::get('/exams', ManageExams::class)->name('exams');
         Route::get('/exams/grades', GradeEntry::class)->name('exams.grades');
         Route::get('/reports/attendance', AttendanceReport::class)->name('reports.attendance');
@@ -88,6 +90,7 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/homework', ManageHomework::class)->name('homework');
         Route::get('/leave', ManageLeave::class)->name('leave');
         Route::get('/data-tools', ManageDataTools::class)->name('data-tools');
+        Route::get('/campuses', \App\Livewire\SchoolAdmin\Campuses\Manage::class)->name('campuses');
     });
 
 Route::middleware(['auth', 'verified', 'role:super_admin'])
@@ -109,6 +112,7 @@ Route::middleware(['auth', 'verified', 'role:teacher'])
         Route::get('/timetable', AllTimetables::class)->name('timetable');
         Route::get('/homework', ManageHomework::class)->name('homework');
         Route::get('/leave', MyLeave::class)->name('leave');
+        Route::get('/payroll', \App\Livewire\Finance\MyPayslips::class)->name('payroll');
     });
 
 Route::middleware(['auth', 'verified', 'role:staff'])
@@ -116,6 +120,7 @@ Route::middleware(['auth', 'verified', 'role:staff'])
     ->name('staff.')
     ->group(function () {
         Route::get('/attendance', MyStaffAttendance::class)->name('attendance');
+        Route::get('/payroll', \App\Livewire\Finance\MyPayslips::class)->name('payroll');
     });
 
 Route::middleware(['auth', 'verified', 'role:student'])

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\SchoolAdmin\Classes;
 
+use App\Models\Campus;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Teacher;
@@ -21,6 +22,8 @@ class Manage extends Component
     public string $className = '';
 
     public int $sortOrder = 0;
+
+    public ?int $classCampusId = null;
 
     public bool $showSectionModal = false;
 
@@ -48,6 +51,7 @@ class Manage extends Component
         return view('livewire.school-admin.classes.manage', [
             'classes' => $classes,
             'teachers' => Teacher::where('school_id', $schoolId)->with('user')->get(),
+            'campuses' => Campus::where('school_id', $schoolId)->orderBy('name')->get(),
         ]);
     }
 
@@ -75,6 +79,7 @@ class Manage extends Component
         $this->classId = $class->id;
         $this->className = $class->name;
         $this->sortOrder = $class->sort_order;
+        $this->classCampusId = $class->campus_id;
         $this->showClassModal = true;
     }
 
@@ -83,13 +88,14 @@ class Manage extends Component
         $validated = $this->validate([
             'className' => 'required|string|max:100',
             'sortOrder' => 'nullable|integer|min:0|max:255',
+            'classCampusId' => 'nullable|exists:campuses,id',
         ]);
 
         $schoolId = auth()->user()->school_id;
 
         SchoolClass::updateOrCreate(
             ['id' => $this->classId, 'school_id' => $schoolId],
-            ['name' => $validated['className'], 'sort_order' => $validated['sortOrder'] ?? 0, 'school_id' => $schoolId]
+            ['name' => $validated['className'], 'sort_order' => $validated['sortOrder'] ?? 0, 'campus_id' => $validated['classCampusId'] ?: null, 'school_id' => $schoolId]
         );
 
         $this->showClassModal = false;
@@ -103,7 +109,7 @@ class Manage extends Component
 
     private function resetClassForm(): void
     {
-        $this->reset(['classId', 'className', 'sortOrder']);
+        $this->reset(['classId', 'className', 'sortOrder', 'classCampusId']);
         $this->resetErrorBag();
     }
 
