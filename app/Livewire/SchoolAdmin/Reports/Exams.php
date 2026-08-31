@@ -20,6 +20,10 @@ class Exams extends Component
 
         $exams = Exam::where('school_id', $schoolId)->orderByDesc('id')->get();
 
+        if ($this->examId && ! $exams->contains('id', $this->examId)) {
+            $this->examId = null;
+        }
+
         if (! $this->examId && $exams->isNotEmpty()) {
             $this->examId = $exams->first()->id;
         }
@@ -76,8 +80,10 @@ class Exams extends Component
 
     public function export(): StreamedResponse
     {
+        $exam = Exam::where('school_id', auth()->user()->school_id)->findOrFail($this->examId);
+
         $results = ExamResult::with(['student.user', 'examSubject.subject'])
-            ->whereHas('examSubject', fn ($q) => $q->where('exam_id', $this->examId))
+            ->whereHas('examSubject', fn ($q) => $q->where('exam_id', $exam->id))
             ->get();
 
         $studentRows = $results->filter(fn ($result) => $result->marks_obtained !== null)
@@ -94,7 +100,7 @@ class Exams extends Component
                 ];
             })->sortByDesc('percentage')->values();
 
-        $examName = Exam::find($this->examId)?->name ?? 'exam';
+        $examName = $exam->name;
 
         return response()->streamDownload(function () use ($studentRows) {
             $handle = fopen('php://output', 'w');

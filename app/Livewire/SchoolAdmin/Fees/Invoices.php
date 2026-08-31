@@ -106,7 +106,14 @@ class Invoices extends Component
         $this->generateStudentId = null;
 
         if ($this->generateStructureId) {
-            $structure = FeeStructure::find($this->generateStructureId);
+            $structure = FeeStructure::where('school_id', auth()->user()->school_id)->find($this->generateStructureId);
+
+            if (! $structure) {
+                $this->generateStructureId = null;
+
+                return;
+            }
+
             $this->generateTitle = $structure->name;
             $this->generateAmount = (string) $structure->amount;
             $this->generateClassId = $structure->school_class_id;
@@ -136,6 +143,15 @@ class Invoices extends Component
 
         $schoolId = auth()->user()->school_id;
 
+        if ($validated['generateClassId']) {
+            SchoolClass::where('school_id', $schoolId)->findOrFail($validated['generateClassId']);
+        }
+
+        $feeStructureId = null;
+        if ($this->generateStructureId) {
+            $feeStructureId = FeeStructure::where('school_id', $schoolId)->findOrFail($this->generateStructureId)->id;
+        }
+
         $students = $this->generateStudentId
             ? Student::where('id', $this->generateStudentId)->where('school_id', $schoolId)->get()
             : Student::where('school_id', $schoolId)
@@ -146,7 +162,7 @@ class Invoices extends Component
             FeeInvoice::create([
                 'school_id' => $schoolId,
                 'student_id' => $student->id,
-                'fee_structure_id' => $this->generateStructureId,
+                'fee_structure_id' => $feeStructureId,
                 'title' => $validated['generateTitle'],
                 'amount' => $validated['generateAmount'],
                 'due_date' => $validated['generateDueDate'] ?: null,

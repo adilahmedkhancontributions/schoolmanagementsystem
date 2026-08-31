@@ -351,6 +351,7 @@ class Manage extends Component
 
     public function openDocuments(int $id): void
     {
+        Admission::where('school_id', auth()->user()->school_id)->findOrFail($id);
         $this->docAdmissionId = $id;
         $this->loadDocuments();
         $this->showDocumentsModal = true;
@@ -358,7 +359,8 @@ class Manage extends Component
 
     public function loadDocuments(): void
     {
-        $this->documents = Document::where('documentable_type', Admission::class)
+        $this->documents = Document::where('school_id', auth()->user()->school_id)
+            ->where('documentable_type', Admission::class)
             ->where('documentable_id', $this->docAdmissionId)
             ->get();
     }
@@ -369,6 +371,8 @@ class Manage extends Component
             'documentTitle' => 'required|string|max:255',
             'documentFile' => 'required|file|max:10240',
         ]);
+
+        Admission::where('school_id', auth()->user()->school_id)->findOrFail($this->docAdmissionId);
 
         $path = $this->documentFile->store('documents', 'public');
 

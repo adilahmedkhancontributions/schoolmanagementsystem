@@ -72,6 +72,22 @@ class GradeEntry extends Component
         ]);
     }
 
+    /**
+     * Loads an ExamSubject the current user is actually authorized to grade:
+     * the exam must belong to the current school, and (for a Teacher) the
+     * subject must be one they teach.
+     */
+    private function authorizedExamSubject(int $id): ?ExamSubject
+    {
+        $user = auth()->user();
+        $teacher = $user->teacher;
+
+        return ExamSubject::with('exam.schoolClass.students', 'subject')
+            ->whereHas('exam', fn ($q) => $q->where('school_id', $user->school_id))
+            ->when($teacher, fn ($q) => $q->whereHas('subject', fn ($q2) => $q2->where('teacher_id', $teacher->id)))
+            ->find($id);
+    }
+
     private function loadResults(): void
     {
         $this->saved = false;
@@ -82,7 +98,7 @@ class GradeEntry extends Component
             return;
         }
 
-        $examSubject = ExamSubject::with('exam.schoolClass.students')->find($this->examSubjectId);
+        $examSubject = $this->authorizedExamSubject($this->examSubjectId);
 
         if (! $examSubject) {
             return;
@@ -99,7 +115,11 @@ class GradeEntry extends Component
 
     public function save(): void
     {
-        $examSubject = ExamSubject::findOrFail($this->examSubjectId);
+        $examSubject = $this->authorizedExamSubject((int) $this->examSubjectId);
+
+        abort_if(! $examSubject, 403);
+
+        $allowedStudentIds = $examSubject->exam->schoolClass->students()->pluck('students.id');
 
         $rules = [];
         foreach (array_keys($this->marks) as $studentId) {
@@ -108,6 +128,10 @@ class GradeEntry extends Component
         $this->validate($rules);
 
         foreach ($this->marks as $studentId => $marksObtained) {
+            if (! $allowedStudentIds->contains((int) $studentId)) {
+                continue;
+            }
+
             ExamResult::updateOrCreate(
                 ['exam_subject_id' => $examSubject->id, 'student_id' => $studentId],
                 [

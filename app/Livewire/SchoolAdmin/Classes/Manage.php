@@ -129,6 +129,8 @@ class Manage extends Component
 
     public function saveSection(): void
     {
+        $schoolId = auth()->user()->school_id;
+
         $validated = $this->validate([
             'sectionClassId' => 'required|exists:school_classes,id',
             'sectionName' => 'required|string|max:50',
@@ -136,8 +138,19 @@ class Manage extends Component
             'sectionTeacherId' => 'nullable|exists:teachers,id',
         ]);
 
+        $schoolClass = SchoolClass::where('school_id', $schoolId)->findOrFail($validated['sectionClassId']);
+
+        if ($validated['sectionTeacherId']) {
+            Teacher::where('school_id', $schoolId)->findOrFail($validated['sectionTeacherId']);
+        }
+
+        if ($this->sectionId) {
+            Section::whereHas('schoolClass', fn ($q) => $q->where('school_id', $schoolId))
+                ->findOrFail($this->sectionId);
+        }
+
         Section::updateOrCreate(
-            ['id' => $this->sectionId, 'school_class_id' => $validated['sectionClassId']],
+            ['id' => $this->sectionId, 'school_class_id' => $schoolClass->id],
             [
                 'name' => $validated['sectionName'],
                 'capacity' => $validated['sectionCapacity'],

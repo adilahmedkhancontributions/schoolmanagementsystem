@@ -43,7 +43,9 @@ class Manage extends Component
                 ->orderByDesc('id')
                 ->get(),
             'classes' => SchoolClass::where('school_id', $schoolId)->orderBy('sort_order')->get(),
-            'activeExam' => $this->activeExamId ? Exam::with('schoolClass')->find($this->activeExamId) : null,
+            'activeExam' => $this->activeExamId
+                ? Exam::with('schoolClass')->where('school_id', $schoolId)->find($this->activeExamId)
+                : null,
         ]);
     }
 
@@ -110,7 +112,10 @@ class Manage extends Component
         $exam = Exam::where('school_id', auth()->user()->school_id)->findOrFail($examId);
         $this->activeExamId = $exam->id;
 
-        $subjects = Subject::where('school_class_id', $exam->school_class_id)->orderBy('name')->get();
+        $subjects = Subject::where('school_class_id', $exam->school_class_id)
+            ->whereHas('schoolClass', fn ($q) => $q->where('school_id', auth()->user()->school_id))
+            ->orderBy('name')
+            ->get();
         $existing = $exam->examSubjects()->get()->keyBy('subject_id');
 
         $this->subjectRows = [];
@@ -131,7 +136,15 @@ class Manage extends Component
     {
         $exam = Exam::where('school_id', auth()->user()->school_id)->findOrFail($this->activeExamId);
 
+        $allowedSubjectIds = Subject::where('school_class_id', $exam->school_class_id)
+            ->whereHas('schoolClass', fn ($q) => $q->where('school_id', auth()->user()->school_id))
+            ->pluck('id');
+
         foreach ($this->subjectRows as $subjectId => $row) {
+            if (! $allowedSubjectIds->contains((int) $subjectId)) {
+                continue;
+            }
+
             if (! $row['included']) {
                 ExamSubject::where('exam_id', $exam->id)->where('subject_id', $subjectId)->delete();
 

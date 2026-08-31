@@ -103,9 +103,15 @@ class Mark extends Component
         ]);
 
         $section = $this->availableSections()->findOrFail($this->sectionId);
+        $allowedStudentIds = $section->students()->pluck('students.id');
 
         foreach ($this->status as $studentId => $status) {
+            if (! $allowedStudentIds->contains((int) $studentId)) {
+                continue;
+            }
+
             $attendance = Attendance::where('student_id', $studentId)
+                ->where('section_id', $section->id)
                 ->whereDate('date', $this->date)
                 ->first() ?? new Attendance(['student_id' => $studentId, 'date' => $this->date]);
 

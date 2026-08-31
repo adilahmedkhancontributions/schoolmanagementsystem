@@ -121,6 +121,7 @@ class AllTimetables extends Component
 
         $teacher = auth()->user()->teacher;
         $entry = TimetableEntry::where('teacher_id', $teacher?->id)->findOrFail($this->requestEntryId);
+        $schoolId = $teacher->school_id;
 
         $requestedSectionId = ((int) $this->requestedSectionId !== $entry->section_id) ? (int) $this->requestedSectionId : null;
         $requestedSubjectId = ((int) $this->requestedSubjectId !== $entry->subject_id) ? (int) $this->requestedSubjectId : null;
@@ -131,6 +132,18 @@ class AllTimetables extends Component
             $this->addError('reason', 'Please change at least one field before submitting.');
 
             return;
+        }
+
+        if ($requestedSectionId) {
+            Section::whereHas('schoolClass', fn ($q) => $q->where('school_id', $schoolId))->findOrFail($requestedSectionId);
+        }
+
+        if ($requestedSubjectId) {
+            Subject::where('school_id', $schoolId)->findOrFail($requestedSubjectId);
+        }
+
+        if ($requestedSlotId) {
+            TimetableSlot::where('school_id', $schoolId)->findOrFail($requestedSlotId);
         }
 
         TimetableChangeRequest::create([

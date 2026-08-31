@@ -19,6 +19,7 @@ use App\Models\FeePayment;
 use App\Models\FeeStructure;
 use App\Models\GalleryImage;
 use App\Models\Guardian;
+use App\Models\LeaveRequest;
 use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\Message;
@@ -629,6 +630,34 @@ class DemoDataSeeder extends Seeder
         Document::firstOrCreate(
             ['school_id' => $school->id, 'documentable_type' => Staff::class, 'documentable_id' => $staffMembers['Demo Staff']->id, 'title' => 'Employment Contract'],
             ['file_path' => 'documents/demo-employment-contract.pdf', 'file_type' => 'pdf']
+        );
+
+        // ---- Leave requests ----
+        LeaveRequest::firstOrCreate(
+            ['school_id' => $school->id, 'user_id' => $teacherUser->id, 'reason' => 'Family function out of town.'],
+            [
+                'from_date' => now()->addDays(5),
+                'to_date' => now()->addDays(7),
+                'status' => LeaveRequest::STATUS_PENDING,
+            ]
+        );
+        LeaveRequest::firstOrCreate(
+            ['school_id' => $school->id, 'user_id' => $parentUser->id, 'student_id' => $student->id, 'reason' => 'Annual medical check-up appointment.'],
+            [
+                'from_date' => now()->addDays(10),
+                'to_date' => now()->addDays(10),
+                'status' => LeaveRequest::STATUS_PENDING,
+            ]
+        );
+        LeaveRequest::firstOrCreate(
+            ['school_id' => $school->id, 'user_id' => $parentUser->id, 'student_id' => $student->id, 'reason' => 'Family wedding.'],
+            [
+                'from_date' => now()->subDays(15),
+                'to_date' => now()->subDays(13),
+                'status' => LeaveRequest::STATUS_APPROVED,
+                'reviewed_by' => $admin->id,
+                'reviewed_at' => now()->subDays(14),
+            ]
         );
     }
 }

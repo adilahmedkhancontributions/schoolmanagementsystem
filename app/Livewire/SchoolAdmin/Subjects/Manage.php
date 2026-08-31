@@ -86,8 +86,8 @@ class Manage extends Component
                     ->where('school_class_id', $this->schoolClassId)
                     ->ignore($this->subjectId),
             ],
-            'schoolClassId' => 'nullable|exists:school_classes,id',
-            'teacherId' => 'nullable|exists:teachers,id',
+            'schoolClassId' => ['nullable', Rule::exists('school_classes', 'id')->where('school_id', $schoolId)],
+            'teacherId' => ['nullable', Rule::exists('teachers', 'id')->where('school_id', $schoolId)],
             'isElective' => 'boolean',
         ]);
 

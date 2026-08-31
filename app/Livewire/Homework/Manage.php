@@ -78,8 +78,8 @@ class Manage extends Component
                 ->find($this->activeHomeworkId)
             : null;
 
-        $submissions = $this->activeHomeworkId
-            ? HomeworkSubmission::where('homework_id', $this->activeHomeworkId)->get()->keyBy('student_id')
+        $submissions = $activeHomework
+            ? HomeworkSubmission::where('homework_id', $activeHomework->id)->get()->keyBy('student_id')
             : collect();
 
         return view('livewire.homework.manage', [
@@ -219,7 +219,13 @@ class Manage extends Component
         }
         $this->validate($rules);
 
+        $allowedStudentIds = $homework->schoolClass->students()->pluck('students.id');
+
         foreach ($this->marksObtained as $studentId => $marks) {
+            if (! $allowedStudentIds->contains((int) $studentId)) {
+                continue;
+            }
+
             HomeworkSubmission::updateOrCreate(
                 ['homework_id' => $homework->id, 'student_id' => $studentId],
                 [

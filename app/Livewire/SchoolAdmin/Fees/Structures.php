@@ -5,6 +5,7 @@ namespace App\Livewire\SchoolAdmin\Fees;
 use App\Models\FeeStructure;
 use App\Models\SchoolClass;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -56,14 +57,14 @@ class Structures extends Component
 
     public function save(): void
     {
+        $schoolId = auth()->user()->school_id;
+
         $validated = $this->validate([
             'name' => 'required|string|max:150',
             'amount' => 'required|numeric|min:0',
-            'schoolClassId' => 'nullable|exists:school_classes,id',
+            'schoolClassId' => ['nullable', Rule::exists('school_classes', 'id')->where('school_id', $schoolId)],
             'frequency' => 'required|in:one_time,monthly,quarterly,term,annual',
         ]);
-
-        $schoolId = auth()->user()->school_id;
 
         FeeStructure::updateOrCreate(
             ['id' => $this->structureId, 'school_id' => $schoolId],

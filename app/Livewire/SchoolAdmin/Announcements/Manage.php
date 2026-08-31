@@ -5,6 +5,7 @@ namespace App\Livewire\SchoolAdmin\Announcements;
 use App\Models\Announcement;
 use App\Models\SchoolClass;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -65,15 +66,15 @@ class Manage extends Component
 
     public function save(): void
     {
+        $schoolId = auth()->user()->school_id;
+
         $validated = $this->validate([
             'title' => 'required|string|max:150',
             'body' => 'required|string|max:5000',
             'audience' => 'required|in:everyone,teachers,students,parents',
-            'schoolClassId' => 'nullable|exists:school_classes,id',
+            'schoolClassId' => ['nullable', Rule::exists('school_classes', 'id')->where('school_id', $schoolId)],
             'publishDate' => 'nullable|date',
         ]);
-
-        $schoolId = auth()->user()->school_id;
 
         Announcement::updateOrCreate(
             ['id' => $this->announcementId, 'school_id' => $schoolId],

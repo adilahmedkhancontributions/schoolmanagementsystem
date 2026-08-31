@@ -107,7 +107,7 @@ class Manage extends Component
         $schoolId = auth()->user()->school_id;
 
         if ($this->staffId) {
-            $staff = Staff::findOrFail($this->staffId);
+            $staff = Staff::where('school_id', $schoolId)->findOrFail($this->staffId);
             $staff->user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -159,6 +159,8 @@ class Manage extends Component
 
     public function openDocuments(int $id): void
     {
+        Staff::where('school_id', auth()->user()->school_id)->findOrFail($id);
+
         $this->docStaffId = $id;
         $this->loadDocuments();
         $this->showDocumentsModal = true;
@@ -166,7 +168,8 @@ class Manage extends Component
 
     public function loadDocuments(): void
     {
-        $this->documents = Document::where('documentable_type', Staff::class)
+        $this->documents = Document::where('school_id', auth()->user()->school_id)
+            ->where('documentable_type', Staff::class)
             ->where('documentable_id', $this->docStaffId)
             ->get();
     }
@@ -177,6 +180,8 @@ class Manage extends Component
             'documentTitle' => 'required|string|max:255',
             'documentFile' => 'required|file|max:10240',
         ]);
+
+        Staff::where('school_id', auth()->user()->school_id)->findOrFail($this->docStaffId);
 
         $path = $this->documentFile->store('documents', 'public');
 

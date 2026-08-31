@@ -11,6 +11,7 @@ use App\Livewire\Exams\ReportCard;
 use App\Livewire\Fees\MyFees;
 use App\Livewire\Homework\Manage as ManageHomework;
 use App\Livewire\Homework\MyHomework;
+use App\Livewire\Leave\MyLeave;
 use App\Livewire\Messaging\Inbox as MessagingInbox;
 use App\Livewire\SchoolAdmin\Admissions\Manage as ManageAdmissions;
 use App\Livewire\SchoolAdmin\Announcements\Manage as ManageAnnouncements;
@@ -19,9 +20,11 @@ use App\Livewire\SchoolAdmin\Cms\Gallery as ManageGallery;
 use App\Livewire\SchoolAdmin\Cms\Messages as ManageMessages;
 use App\Livewire\SchoolAdmin\Cms\Pages as ManagePages;
 use App\Livewire\SchoolAdmin\Cms\Posts as ManagePosts;
+use App\Livewire\SchoolAdmin\DataTools\Manage as ManageDataTools;
 use App\Livewire\SchoolAdmin\Exams\Manage as ManageExams;
 use App\Livewire\SchoolAdmin\Fees\Invoices as ManageFeeInvoices;
 use App\Livewire\SchoolAdmin\Fees\Structures as ManageFeeStructures;
+use App\Livewire\SchoolAdmin\Leave\Manage as ManageLeave;
 use App\Livewire\SchoolAdmin\Reports\Attendance as AttendanceReport;
 use App\Livewire\SchoolAdmin\Reports\Exams as ExamReport;
 use App\Livewire\SchoolAdmin\Reports\Fees as FeesReport;
@@ -83,6 +86,8 @@ Route::middleware(['auth', 'verified', 'role:school_admin'])
         Route::get('/timetable/slots', ManageTimetableSlots::class)->name('timetable.slots');
         Route::get('/timetable/requests', ManageTimetableRequests::class)->name('timetable.requests');
         Route::get('/homework', ManageHomework::class)->name('homework');
+        Route::get('/leave', ManageLeave::class)->name('leave');
+        Route::get('/data-tools', ManageDataTools::class)->name('data-tools');
     });
 
 Route::middleware(['auth', 'verified', 'role:super_admin'])
@@ -103,6 +108,7 @@ Route::middleware(['auth', 'verified', 'role:teacher'])
         Route::get('/messages', MessagingInbox::class)->name('messages');
         Route::get('/timetable', AllTimetables::class)->name('timetable');
         Route::get('/homework', ManageHomework::class)->name('homework');
+        Route::get('/leave', MyLeave::class)->name('leave');
     });
 
 Route::middleware(['auth', 'verified', 'role:staff'])
@@ -134,6 +140,7 @@ Route::middleware(['auth', 'verified', 'role:parent'])
         Route::get('/announcements', AnnouncementsFeed::class)->name('announcements');
         Route::get('/messages', MessagingInbox::class)->name('messages');
         Route::get('/homework', MyHomework::class)->name('homework');
+        Route::get('/leave', MyLeave::class)->name('leave');
     });
 
 Route::prefix('s/{school:slug}')
