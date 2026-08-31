@@ -1,12 +1,20 @@
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Homework</h1>
-            <p class="text-sm text-slate-500 mt-1">Assign homework per class and subject, then review submissions and grade them.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-book-open text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Homework</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Assign homework per class and subject, then review submissions and grade them.</p>
+                </div>
+            </div>
+            <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                <i class="fa-solid fa-plus"></i> Assign Homework
+            </button>
         </div>
-        <button type="button" wire:click="openCreate" class="btn-primary">
-            <i class="fa-solid fa-plus"></i> Assign Homework
-        </button>
     </div>
 
     <!-- Mobile card list -->
@@ -22,16 +30,17 @@
                         <button type="button" wire:click="openSubmissions({{ $homework->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Submissions & grading">
                             <i class="fa-solid fa-list-check"></i>
                         </button>
-                        <button type="button" wire:click="openEdit({{ $homework->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                        <button type="button" wire:click="openEdit({{ $homework->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button type="button" wire:click="delete({{ $homework->id }})" wire:confirm="Delete this homework and all its submissions?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                        <button type="button" wire:click="delete({{ $homework->id }})" wire:confirm="Delete this homework and all its submissions?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
                 </div>
                 <p class="mt-3 text-xs text-slate-500">
                     <i class="fa-solid fa-calendar-days mr-1"></i> Due {{ $homework->due_date->format('d M Y') }}
+                    &middot; <span class="font-medium text-indigo-600">{{ $homework->submissions_count }}</span> submission{{ $homework->submissions_count === 1 ? '' : 's' }}
                 </p>
             </div>
         @empty
@@ -47,6 +56,7 @@
                     <th class="py-3 px-4">Title</th>
                     <th class="py-3 px-4">Class</th>
                     <th class="py-3 px-4">Subject</th>
+                    <th class="py-3 px-4">Submissions</th>
                     <th class="py-3 px-4">Due Date</th>
                     <th class="py-3 px-4"></th>
                 </tr>
@@ -57,22 +67,28 @@
                         <td class="py-3 px-4 font-medium text-slate-800">{{ $homework->title }}</td>
                         <td class="py-3 px-4 text-slate-600">{{ $homework->schoolClass->name }}</td>
                         <td class="py-3 px-4 text-slate-600">{{ $homework->subject->name }}</td>
+                        <td class="py-3 px-4">
+                            <span class="inline-flex items-center gap-1.5 rounded-full {{ $homework->submissions_count > 0 ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-500' }} px-2.5 py-1 text-xs font-medium">
+                                <i class="fa-solid fa-file-circle-check"></i>
+                                {{ $homework->submissions_count }}
+                            </span>
+                        </td>
                         <td class="py-3 px-4 text-slate-600">{{ $homework->due_date->format('d M Y') }}</td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
                             <button type="button" wire:click="openSubmissions({{ $homework->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Submissions & grading">
                                 <i class="fa-solid fa-list-check"></i>
                             </button>
-                            <button type="button" wire:click="openEdit({{ $homework->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <button type="button" wire:click="openEdit({{ $homework->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button type="button" wire:click="delete({{ $homework->id }})" wire:confirm="Delete this homework and all its submissions?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <button type="button" wire:click="delete({{ $homework->id }})" wire:confirm="Delete this homework and all its submissions?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="py-10 text-center text-slate-500">No homework assigned yet.</td>
+                        <td colspan="6" class="py-10 text-center text-slate-500">No homework assigned yet.</td>
                     </tr>
                 @endforelse
             </tbody>

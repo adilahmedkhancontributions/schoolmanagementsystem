@@ -7,8 +7,18 @@
 @endphp
 
 <div class="mb-6">
-    <h1 class="font-heading text-2xl font-bold text-slate-900">Timetable</h1>
-    <p class="text-sm text-slate-500 mt-1 mb-4">Build your weekly class schedule.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-4">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center gap-3">
+            <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                <i class="fa-solid fa-calendar-days text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-heading text-xl sm:text-2xl font-bold">Timetable</h1>
+                <p class="text-sm text-white/80 mt-0.5">Build your weekly class schedule.</p>
+            </div>
+        </div>
+    </div>
 
     <div class="flex flex-wrap gap-2">
         @foreach ($tabs as $key => $tab)

@@ -1,12 +1,20 @@
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Students</h1>
-            <p class="text-sm text-slate-500 mt-1">Manage student enrollment and class placement.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-user-graduate text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Students</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Manage student enrollment and class placement.</p>
+                </div>
+            </div>
+            <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                <i class="fa-solid fa-plus"></i> Add Student
+            </button>
         </div>
-        <button type="button" wire:click="openCreate" class="btn-primary">
-            <i class="fa-solid fa-plus"></i> Add Student
-        </button>
     </div>
 
     @if ($generatedPassword)
@@ -22,25 +30,33 @@
         </div>
     @endif
 
-    <div class="flex flex-col sm:flex-row gap-3 mb-4">
-        <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name, email or admission no..."
-               class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+    <div class="mb-4">
+        <div class="flex flex-wrap items-center gap-1.5">
+            <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name, email or admission no..."
+                   class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
 
-        <select wire:model.live="filterClassId" class="min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-            <option value="">All classes</option>
-            @foreach ($classes as $class)
-                <option value="{{ $class->id }}">{{ $class->name }}</option>
-            @endforeach
-        </select>
-
-        @if ($filterClassId)
-            <select wire:model.live="filterSectionId" class="min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
-                <option value="">All sections</option>
-                @foreach ($filterSections as $section)
-                    <option value="{{ $section->id }}">{{ $section->name }}</option>
+            <select wire:model.live="filterClassId" class="min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+                <option value="">All classes</option>
+                @foreach ($classes as $class)
+                    <option value="{{ $class->id }}">{{ $class->name }}</option>
                 @endforeach
             </select>
-        @endif
+
+            @if ($filterClassId)
+                <select wire:model.live="filterSectionId" class="min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+                    <option value="">All sections</option>
+                    @foreach ($filterSections as $section)
+                        <option value="{{ $section->id }}">{{ $section->name }}</option>
+                    @endforeach
+                </select>
+            @endif
+
+            @if ($students->total() > 0)
+                <span class="ml-auto text-xs font-medium text-slate-500">
+                    {{ number_format($students->total()) }} student{{ $students->total() === 1 ? '' : 's' }}
+                </span>
+            @endif
+        </div>
     </div>
 
     <!-- Mobile card list -->
@@ -58,13 +74,13 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
-                        <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                        <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
                             <i class="fa-solid fa-file-lines"></i>
                         </button>
-                        <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                        <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button type="button" wire:click="delete({{ $student->id }})" wire:confirm="Remove this student and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                        <button type="button" wire:click="delete({{ $student->id }})" wire:confirm="Remove this student and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -78,6 +94,12 @@
                         <dt class="text-slate-400">Class / Section</dt>
                         <dd class="text-slate-700 font-medium mt-0.5">{{ $student->schoolClass?->name ?? '—' }}{{ $student->section ? ' / '.$student->section->name : '' }}</dd>
                     </div>
+                    @if ($student->user->phone)
+                        <div class="col-span-2">
+                            <dt class="text-slate-400">Phone</dt>
+                            <dd class="text-slate-700 font-medium mt-0.5">{{ $student->user->phone }}</dd>
+                        </div>
+                    @endif
                 </dl>
             </div>
         @empty
@@ -107,13 +129,13 @@
                         </td>
                         <td class="py-3 px-4 text-slate-600">{{ $student->user->email }}</td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
-                            <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                            <button type="button" wire:click="openDocuments({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
                                 <i class="fa-solid fa-file-lines"></i>
                             </button>
-                            <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <button type="button" wire:click="openEdit({{ $student->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button type="button" wire:click="delete({{ $student->id }})" wire:confirm="Remove this student and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <button type="button" wire:click="delete({{ $student->id }})" wire:confirm="Remove this student and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>

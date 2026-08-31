@@ -11,14 +11,22 @@
         ];
     @endphp
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Admissions</h1>
-            <p class="text-sm text-slate-500 mt-1">Track applicants from inquiry through interview, test and enrollment.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-user-plus text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Admissions</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Track applicants from inquiry through interview, test and enrollment.</p>
+                </div>
+            </div>
+            <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                <i class="fa-solid fa-plus"></i> New Inquiry
+            </button>
         </div>
-        <button type="button" wire:click="openCreate" class="btn-primary">
-            <i class="fa-solid fa-plus"></i> New Inquiry
-        </button>
     </div>
 
     @if ($generatedPassword)
@@ -55,6 +63,12 @@
                 <option value="{{ $class->id }}">{{ $class->name }}</option>
             @endforeach
         </select>
+
+        @if ($admissions->total() > 0)
+            <span class="ml-auto text-xs font-medium text-slate-500">
+                {{ number_format($admissions->total()) }} applicant{{ $admissions->total() === 1 ? '' : 's' }}
+            </span>
+        @endif
     </div>
 
     <!-- Mobile card list -->
@@ -81,10 +95,10 @@
                     </div>
                 </dl>
                 <div class="mt-3 flex items-center gap-1 flex-wrap">
-                    <button type="button" wire:click="openDocuments({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                    <button type="button" wire:click="openDocuments({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
                         <i class="fa-solid fa-file-lines"></i>
                     </button>
-                    <button type="button" wire:click="openEdit({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                    <button type="button" wire:click="openEdit({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                         <i class="fa-solid fa-pen"></i>
                     </button>
                     @if (! in_array($admission->status, ['enrolled', 'rejected', 'withdrawn']))
@@ -133,10 +147,10 @@
                             </span>
                         </td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
-                            <button type="button" wire:click="openDocuments({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                            <button type="button" wire:click="openDocuments({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
                                 <i class="fa-solid fa-file-lines"></i>
                             </button>
-                            <button type="button" wire:click="openEdit({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <button type="button" wire:click="openEdit({{ $admission->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
                             @if (! in_array($admission->status, ['enrolled', 'rejected', 'withdrawn']))

@@ -7,22 +7,30 @@
     $currency = auth()->user()->school->currency;
 @endphp
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Fee Invoices</h1>
-            <p class="text-sm text-slate-500 mt-1">Generate invoices and record payments.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('school-admin.fees.structures') }}" class="btn-secondary">
-                <i class="fa-solid fa-list-check"></i> Structures
-            </a>
-            <button type="button" wire:click="openGenerate" class="btn-primary">
-                <i class="fa-solid fa-plus"></i> Generate Invoices
-            </button>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Fee Invoices</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Generate invoices and record payments.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('school-admin.fees.structures') }}" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-list-check"></i> Structures
+                </a>
+                <button type="button" wire:click="openGenerate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-plus"></i> Generate Invoices
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+    <div class="flex flex-col sm:flex-row items-center gap-3 mb-4">
         <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by title or student..."
                class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
 
@@ -39,6 +47,12 @@
             <option value="partial">Partial</option>
             <option value="paid">Paid</option>
         </select>
+
+        @if ($invoices->total() > 0)
+            <span class="ml-auto text-xs font-medium text-slate-500">
+                {{ number_format($invoices->total()) }} invoice{{ $invoices->total() === 1 ? '' : 's' }}
+            </span>
+        @endif
     </div>
 
     <!-- Mobile card list -->
@@ -54,7 +68,7 @@
                         <button type="button" wire:click="openPayment({{ $invoice->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Record payment">
                             <i class="fa-solid fa-money-bill-wave"></i>
                         </button>
-                        <button type="button" wire:click="deleteInvoice({{ $invoice->id }})" wire:confirm="Delete this invoice and its payment history?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                        <button type="button" wire:click="deleteInvoice({{ $invoice->id }})" wire:confirm="Delete this invoice and its payment history?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -118,7 +132,7 @@
                             <button type="button" wire:click="openPayment({{ $invoice->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Record payment">
                                 <i class="fa-solid fa-money-bill-wave"></i>
                             </button>
-                            <button type="button" wire:click="deleteInvoice({{ $invoice->id }})" wire:confirm="Delete this invoice and its payment history?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <button type="button" wire:click="deleteInvoice({{ $invoice->id }})" wire:confirm="Delete this invoice and its payment history?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>

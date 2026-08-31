@@ -1,12 +1,20 @@
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Staff</h1>
-            <p class="text-sm text-slate-500 mt-1">Manage non-teaching staff for your school.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-id-badge text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Staff</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Manage non-teaching staff for your school.</p>
+                </div>
+            </div>
+            <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                <i class="fa-solid fa-plus"></i> Add Staff
+            </button>
         </div>
-        <button type="button" wire:click="openCreate" class="btn-primary">
-            <i class="fa-solid fa-plus"></i> Add Staff
-        </button>
     </div>
 
     @if ($generatedPassword)
@@ -23,8 +31,15 @@
     @endif
 
     <div class="mb-4">
-        <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name or email..."
-               class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+        <div class="flex flex-wrap items-center gap-1.5">
+            <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name or email..."
+                   class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+            @if ($staffMembers->total() > 0)
+                <span class="ml-auto text-xs font-medium text-slate-500">
+                    {{ number_format($staffMembers->total()) }} staff member{{ $staffMembers->total() === 1 ? '' : 's' }}
+                </span>
+            @endif
+        </div>
     </div>
 
     <!-- Mobile card list -->
@@ -42,13 +57,13 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
-                        <button type="button" wire:click="openDocuments({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                        <button type="button" wire:click="openDocuments({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
                             <i class="fa-solid fa-file-lines"></i>
                         </button>
-                        <button type="button" wire:click="openEdit({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                        <button type="button" wire:click="openEdit({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button type="button" wire:click="delete({{ $member->id }})" wire:confirm="Remove this staff member and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                        <button type="button" wire:click="delete({{ $member->id }})" wire:confirm="Remove this staff member and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -91,13 +106,13 @@
                         <td class="py-3 px-4 text-slate-600">{{ $member->designation }}</td>
                         <td class="py-3 px-4 text-slate-600">{{ $member->department ?? '—' }}</td>
                         <td class="py-3 px-4 text-right whitespace-nowrap">
-                            <button type="button" wire:click="openDocuments({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600">
+                            <button type="button" wire:click="openDocuments({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-emerald-600" title="Documents">
                                 <i class="fa-solid fa-file-lines"></i>
                             </button>
-                            <button type="button" wire:click="openEdit({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <button type="button" wire:click="openEdit({{ $member->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button type="button" wire:click="delete({{ $member->id }})" wire:confirm="Remove this staff member and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <button type="button" wire:click="delete({{ $member->id }})" wire:confirm="Remove this staff member and their account?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>

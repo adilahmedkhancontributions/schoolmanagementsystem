@@ -57,6 +57,7 @@ class Manage extends Component
         $schoolId = $user->school_id;
 
         $homeworks = Homework::with(['schoolClass', 'subject'])
+            ->withCount('submissions')
             ->where('school_id', $schoolId)
             ->when($teacher, fn ($q) => $q->where('teacher_id', $teacher->id))
             ->orderByDesc('due_date')

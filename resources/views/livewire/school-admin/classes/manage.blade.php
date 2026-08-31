@@ -1,17 +1,32 @@
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Classes & Sections</h1>
-            <p class="text-sm text-slate-500 mt-1">Set up the classes and sections used across your school.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Classes & Sections</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Set up the classes and sections used across your school.</p>
+                </div>
+            </div>
+            <button type="button" wire:click="openCreateClass" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                <i class="fa-solid fa-plus"></i> Add Class
+            </button>
         </div>
-        <button type="button" wire:click="openCreateClass" class="btn-primary">
-            <i class="fa-solid fa-plus"></i> Add Class
-        </button>
     </div>
 
     <div class="mb-4">
-        <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search classes..."
-               class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+        <div class="flex flex-wrap items-center gap-1.5">
+            <input type="search" wire:model.live.debounce.400ms="search" placeholder="Search classes..."
+                   class="w-full sm:w-72 min-h-touch rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none">
+            @if ($classes->count() > 0)
+                <span class="ml-auto text-xs font-medium text-slate-500">
+                    {{ number_format($classes->count()) }} class{{ $classes->count() === 1 ? '' : 'es' }}
+                </span>
+            @endif
+        </div>
     </div>
 
     <div class="space-y-4">
@@ -26,10 +41,10 @@
                         <button type="button" wire:click="openCreateSection({{ $class->id }})" class="btn-secondary text-xs">
                             <i class="fa-solid fa-plus"></i> Section
                         </button>
-                        <button type="button" wire:click="openEditClass({{ $class->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                        <button type="button" wire:click="openEditClass({{ $class->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit class">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button type="button" wire:click="deleteClass({{ $class->id }})" wire:confirm="Delete this class and all its sections?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                        <button type="button" wire:click="deleteClass({{ $class->id }})" wire:confirm="Delete this class and all its sections?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete class">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -55,10 +70,10 @@
                                         <td class="py-2 pr-4 text-slate-600">{{ $section->classTeacher?->user?->name ?? '—' }}</td>
                                         <td class="py-2 pr-4 text-slate-600">{{ $section->capacity }}</td>
                                         <td class="py-2 pr-4 text-right">
-                                            <button type="button" wire:click="openEditSection({{ $section->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                                            <button type="button" wire:click="openEditSection({{ $section->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit section">
                                                 <i class="fa-solid fa-pen"></i>
                                             </button>
-                                            <button type="button" wire:click="deleteSection({{ $section->id }})" wire:confirm="Delete this section?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                                            <button type="button" wire:click="deleteSection({{ $section->id }})" wire:confirm="Delete this section?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete section">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </td>

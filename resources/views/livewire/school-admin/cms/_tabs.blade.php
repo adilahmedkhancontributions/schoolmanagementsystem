@@ -9,16 +9,24 @@
 @endphp
 
 <div class="mb-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Website (CMS)</h1>
-            <p class="text-sm text-slate-500 mt-1">Manage your school's public website content.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-globe text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Website (CMS)</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Manage your school's public website content.</p>
+                </div>
+            </div>
+            @if ($school)
+                <a href="{{ route('public.site.home', $school) }}" target="_blank" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Site
+                </a>
+            @endif
         </div>
-        @if ($school)
-            <a href="{{ route('public.site.home', $school) }}" target="_blank" class="btn-secondary">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> View Public Site
-            </a>
-        @endif
     </div>
 
     <div class="flex flex-wrap gap-2 mt-4">

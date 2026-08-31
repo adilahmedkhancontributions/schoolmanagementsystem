@@ -8,14 +8,22 @@
         ];
     @endphp
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Announcements</h1>
-            <p class="text-sm text-slate-500 mt-1">Publish notices to teachers, students and parents.</p>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-bullhorn text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Announcements</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Publish notices to teachers, students and parents.</p>
+                </div>
+            </div>
+            <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                <i class="fa-solid fa-plus"></i> New Announcement
+            </button>
         </div>
-        <button type="button" wire:click="openCreate" class="btn-primary">
-            <i class="fa-solid fa-plus"></i> New Announcement
-        </button>
     </div>
 
     @php

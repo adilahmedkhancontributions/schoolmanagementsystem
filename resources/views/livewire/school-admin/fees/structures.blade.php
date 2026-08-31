@@ -1,16 +1,24 @@
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Fee Structures</h1>
-            <p class="text-sm text-slate-500 mt-1">Define recurring or one-time fee items to bill to students.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('school-admin.fees.invoices') }}" class="btn-secondary">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Invoices
-            </a>
-            <button type="button" wire:click="openCreate" class="btn-primary">
-                <i class="fa-solid fa-plus"></i> Add Fee Structure
-            </button>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-list-check text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Fee Structures</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Define recurring or one-time fee items to bill to students.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('school-admin.fees.invoices') }}" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Invoices
+                </a>
+                <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-plus"></i> Add Fee Structure
+                </button>
+            </div>
         </div>
     </div>
 

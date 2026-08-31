@@ -1,16 +1,24 @@
 <div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-            <h1 class="font-heading text-2xl font-bold text-slate-900">Exams</h1>
-            <p class="text-sm text-slate-500 mt-1">Set up exams per class, then choose subjects and pass marks.</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('school-admin.exams.grades') }}" class="btn-secondary">
-                <i class="fa-solid fa-pen-to-square"></i> Enter Grades
-            </a>
-            <button type="button" wire:click="openCreate" class="btn-primary">
-                <i class="fa-solid fa-plus"></i> Add Exam
-            </button>
+    <div class="relative overflow-hidden rounded-2xl brand-gradient text-white p-6 mb-6">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_55%)]"></div>
+        <div class="relative flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center">
+                    <i class="fa-solid fa-file-pen text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl sm:text-2xl font-bold">Exams</h1>
+                    <p class="text-sm text-white/80 mt-0.5">Set up exams per class, then choose subjects and pass marks.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('school-admin.exams.grades') }}" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-pen-to-square"></i> Enter Grades
+                </a>
+                <button type="button" wire:click="openCreate" class="btn-secondary bg-white/15 text-white border-white/30 hover:bg-white/25">
+                    <i class="fa-solid fa-plus"></i> Add Exam
+                </button>
+            </div>
         </div>
     </div>
 
@@ -27,10 +35,10 @@
                         <button type="button" wire:click="openSubjects({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Subjects & marks">
                             <i class="fa-solid fa-list-check"></i>
                         </button>
-                        <button type="button" wire:click="openEdit({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                        <button type="button" wire:click="openEdit({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button type="button" wire:click="delete({{ $exam->id }})" wire:confirm="Delete this exam and all its results?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                        <button type="button" wire:click="delete({{ $exam->id }})" wire:confirm="Delete this exam and all its results?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -78,10 +86,10 @@
                             <button type="button" wire:click="openSubjects({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Subjects & marks">
                                 <i class="fa-solid fa-list-check"></i>
                             </button>
-                            <button type="button" wire:click="openEdit({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600">
+                            <button type="button" wire:click="openEdit({{ $exam->id }})" class="min-h-touch min-w-touch text-slate-500 hover:text-indigo-600" title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button type="button" wire:click="delete({{ $exam->id }})" wire:confirm="Delete this exam and all its results?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600">
+                            <button type="button" wire:click="delete({{ $exam->id }})" wire:confirm="Delete this exam and all its results?" class="min-h-touch min-w-touch text-slate-500 hover:text-rose-600" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>

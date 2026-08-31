@@ -994,6 +994,38 @@ No changes were needed to these files this session.
 - `database/seeders/DemoDataSeeder.php` (import `LeaveRequest` + 3 demo leave request records)
 - `DEPLOYMENT.md` (comprehensive Hostinger + MySQL deployment guide)
 
+## UI/UX Polish — School Admin screens (this session)
+
+Applied the established portal-screen convention (gradient header + icon tile +
+white/15 action button) consistently across every School Admin CRUD/manage screen,
+and added data-reading affordances (result counts, tooltips, submission counts).
+
+### Screens converted to gradient header
+- Students, Teachers, Staff, Subjects, Classes & Sections, Exams, Admissions
+- Fee Invoices, Fee Structures, Homework (admin), Announcements
+- CMS tabs, Timetable tabs, Reports tabs, School Profile settings
+- (Leave admin, DataTools, Dashboard, and all student/parent portal screens
+  already used the gradient header from prior passes.)
+
+### Data-reading & UX improvements
+- Result/filter counts added to searchable lists: Students, Teachers, Staff,
+  Subjects, Classes, Admissions, Fee Invoices.
+- `title` tooltips on action icon buttons (edit/delete/documents/payments/view)
+  on both mobile card lists and desktop tables across all CRUD screens.
+- Phone number added to phone-less mobile card detail lists (Students, Teachers,
+  Staff).
+- Homework admin: added a Submissions column with count badge (via
+  `Homework::withCount('submissions')`) plus per-row submission count on mobile cards.
+- `php artisan view:cache` passes (all blade templates compile).
+
+### Files changed
+- `resources/views/livewire/school-admin/{students,teachers,staff,subjects,classes,exams,admissions,announcements,fees}/manage.blade.php` (+ `fees/structures.blade.php`)
+- `resources/views/livewire/school-admin/{cms,timetable,reports}/_tabs.blade.php`
+- `resources/views/livewire/school-admin/settings/profile.blade.php`
+- `resources/views/livewire/homework/manage.blade.php` + `app/Livewire/Homework/Manage.php` (added `withCount`)
+
+
+
 ## Phase 5 — Polish & Deployment (IN PROGRESS)
 
 - Deployment guide for shared hosting (Hostinger), backups, cron, SSL — ✅ Done (see `DEPLOYMENT.md`)
