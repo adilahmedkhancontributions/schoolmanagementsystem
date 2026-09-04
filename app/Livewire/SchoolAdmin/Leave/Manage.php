@@ -3,7 +3,9 @@
 namespace App\Livewire\SchoolAdmin\Leave;
 
 use App\Models\LeaveRequest;
+use App\Notifications\LeaveRequestUpdated;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -56,6 +58,14 @@ class Manage extends Component
             'reviewed_at' => now(),
         ]);
 
+        if ($request->user) {
+            Notification::send($request->user, new LeaveRequestUpdated(
+                'approved',
+                $request->from_date,
+                $request->to_date
+            ));
+        }
+
         session()->flash('message', 'Leave request approved.');
     }
 
@@ -88,6 +98,15 @@ class Manage extends Component
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);
+
+        if ($request->user) {
+            Notification::send($request->user, new LeaveRequestUpdated(
+                'rejected',
+                $request->from_date,
+                $request->to_date,
+                $this->adminNote ?: null
+            ));
+        }
 
         $this->cancelReject();
         session()->flash('message', 'Leave request rejected.');

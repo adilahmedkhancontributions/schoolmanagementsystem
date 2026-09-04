@@ -4,7 +4,9 @@ namespace App\Livewire\SchoolAdmin\Announcements;
 
 use App\Models\Announcement;
 use App\Models\SchoolClass;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -88,6 +90,41 @@ class Manage extends Component
                 'created_by' => auth()->id(),
             ]
         );
+
+        if ($this->publishNow) {
+            $roleMap = [
+                'everyone' => ['teacher', 'student', 'parent'],
+                'teachers' => ['teacher'],
+                'students' => ['student'],
+                'parents' => ['parent'],
+            ];
+            $roles = $roleMap[$validated['audience']] ?? [];
+
+            if ($validated['schoolClassId']) {
+                $class = SchoolClass::with('students.user.guardianProfile')->find($validated['schoolClassId']);
+                $recipients = collect();
+                if ($class) {
+                    $studentUsers = $class->students->pluck('user')->filter()->values();
+                    $guardianUsers = $class->students->flatMap(fn ($s) => $s->guardians ?? [])->pluck('user')->filter()->values();
+                    if (in_array('teacher', $roles)) {
+                        $teacherUsers = User::role('teacher')->where('school_id', $schoolId)->get();
+                        $recipients = $recipients->merge($teacherUsers);
+                    }
+                    $recipients = $recipients->merge($studentUsers)->merge($guardianUsers);
+                }
+            } else {
+                $recipients = User::role($roles)->where('school_id', $schoolId)->get();
+            }
+
+            $recipients = $recipients->unique('id')->values();
+            if ($recipients->isNotEmpty()) {
+                Notification::send($recipients, new \App\Notifications\AnnouncementPublished(
+                    $validated['title'],
+                    $validated['body'],
+                    auth()->user()->name
+                ));
+            }
+        }
 
         $this->showModal = false;
         $this->resetForm();

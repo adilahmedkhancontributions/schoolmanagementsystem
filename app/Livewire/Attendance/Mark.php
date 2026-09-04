@@ -4,7 +4,9 @@ namespace App\Livewire\Attendance;
 
 use App\Models\Attendance;
 use App\Models\Section;
+use App\Notifications\AbsenceRecorded;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -122,6 +124,20 @@ class Mark extends Component
                 'remarks' => $this->remarks[$studentId] ?: null,
                 'marked_by' => auth()->id(),
             ])->save();
+
+            if ($status === 'absent') {
+                $student = \App\Models\Student::with('user', 'guardians')->find($studentId);
+                if ($student) {
+                    $notifyUsers = $student->guardians->pluck('user')->filter()->values();
+                    if ($notifyUsers->isNotEmpty()) {
+                        Notification::send($notifyUsers, new AbsenceRecorded(
+                            $student->user->name ?? 'Student',
+                            $this->date,
+                            'absent'
+                        ));
+                    }
+                }
+            }
         }
 
         $this->saved = true;

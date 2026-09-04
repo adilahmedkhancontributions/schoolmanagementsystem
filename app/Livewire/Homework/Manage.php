@@ -6,7 +6,9 @@ use App\Models\Homework;
 use App\Models\HomeworkSubmission;
 use App\Models\SchoolClass;
 use App\Models\Subject;
+use App\Notifications\HomeworkAssigned;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -148,7 +150,7 @@ class Manage extends Component
             $attachmentPath = $this->attachment->store('homework-attachments', 'public');
         }
 
-        Homework::updateOrCreate(
+        $homework = Homework::updateOrCreate(
             ['id' => $this->homeworkId, 'school_id' => $user->school_id],
             [
                 'school_id' => $user->school_id,
@@ -162,6 +164,21 @@ class Manage extends Component
                 'attachment_path' => $attachmentPath,
             ]
         );
+
+        if (! $this->homeworkId) {
+            $class = SchoolClass::with('students.user')->find($validated['schoolClassId']);
+            if ($class) {
+                $studentUsers = $class->students->pluck('user')->filter()->values();
+                if ($studentUsers->isNotEmpty()) {
+                    Notification::send($studentUsers, new HomeworkAssigned(
+                        $subject->name,
+                        $validated['title'],
+                        $validated['dueDate'],
+                        $class->name
+                    ));
+                }
+            }
+        }
 
         $this->showModal = false;
         $this->resetForm();

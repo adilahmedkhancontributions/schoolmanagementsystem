@@ -5,7 +5,9 @@ namespace App\Livewire\SchoolAdmin\Staff;
 use App\Models\Campus;
 use App\Models\Staff;
 use App\Models\User;
+use App\Notifications\AccountCreated;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -149,6 +151,8 @@ class Manage extends Component
                 'campus_id' => $validated['campusId'] ?: null,
                 'joining_date' => now(),
             ]);
+
+            Notification::send($user, new AccountCreated('Staff', $validated['email'], $password));
 
             $this->generatedPassword = $password;
         }

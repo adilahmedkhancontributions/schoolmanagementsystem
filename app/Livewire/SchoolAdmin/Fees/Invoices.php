@@ -8,7 +8,10 @@ use App\Models\FeePayment;
 use App\Models\FeeStructure;
 use App\Models\SchoolClass;
 use App\Models\Student;
+use App\Notifications\FeeInvoiceGenerated;
+use App\Notifications\FeePaymentReceived;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -164,13 +167,13 @@ class Invoices extends Component
         }
 
         $students = $this->generateStudentId
-            ? Student::where('id', $this->generateStudentId)->where('school_id', $schoolId)->get()
-            : Student::where('school_id', $schoolId)
+            ? Student::with('user')->where('id', $this->generateStudentId)->where('school_id', $schoolId)->get()
+            : Student::with('user')->where('school_id', $schoolId)
                 ->when($this->generateClassId, fn ($q) => $q->where('school_class_id', $this->generateClassId))
                 ->get();
 
         foreach ($students as $student) {
-            FeeInvoice::create([
+            $invoice = FeeInvoice::create([
                 'school_id' => $schoolId,
                 'student_id' => $student->id,
                 'fee_structure_id' => $feeStructureId,
@@ -179,6 +182,16 @@ class Invoices extends Component
                 'due_date' => $validated['generateDueDate'] ?: null,
                 'status' => 'unpaid',
             ]);
+
+            $studentUser = $student->user;
+            if ($studentUser) {
+                Notification::send($studentUser, new FeeInvoiceGenerated(
+                    $student->user->name,
+                    $validated['generateTitle'],
+                    (float) $validated['generateAmount'],
+                    $validated['generateDueDate'] ?: 'No deadline set'
+                ));
+            }
         }
 
         $this->showGenerateModal = false;
@@ -212,7 +225,7 @@ class Invoices extends Component
 
     public function recordPayment(): void
     {
-        $invoice = FeeInvoice::where('school_id', auth()->user()->school_id)->findOrFail($this->activeInvoiceId);
+        $invoice = FeeInvoice::with('student.user')->where('school_id', auth()->user()->school_id)->findOrFail($this->activeInvoiceId);
 
         $validated = $this->validate([
             'paymentAmount' => ['required', 'numeric', 'min:0.01', 'max:'.$invoice->balance()],
@@ -232,6 +245,16 @@ class Invoices extends Component
 
         $invoice->paid_amount = bcadd((string) $invoice->paid_amount, (string) $validated['paymentAmount'], 2);
         $invoice->refreshStatus();
+
+        $student = $invoice->student;
+        if ($student && $student->user) {
+            Notification::send($student->user, new FeePaymentReceived(
+                $student->user->name,
+                $invoice->title,
+                (float) $validated['paymentAmount'],
+                (float) $invoice->balance()
+            ));
+        }
 
         $this->paymentAmount = '';
         $this->paymentNotes = '';

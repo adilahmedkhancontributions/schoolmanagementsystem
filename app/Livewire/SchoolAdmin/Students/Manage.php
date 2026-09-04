@@ -7,7 +7,9 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\User;
+use App\Notifications\AccountCreated;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -241,6 +243,8 @@ class Manage extends Component
                 'notes' => $validated['notes'] ?: null,
                 'status' => 'active',
             ]);
+
+            Notification::send($user, new AccountCreated('Student', $validated['email'], $password));
 
             $this->generatedPassword = $password;
         }

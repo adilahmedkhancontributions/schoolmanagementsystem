@@ -3,7 +3,10 @@
 namespace App\Livewire\Leave;
 
 use App\Models\LeaveRequest;
+use App\Models\User;
+use App\Notifications\LeaveRequestSubmitted;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -94,6 +97,18 @@ class MyLeave extends Component
             'reason' => $validated['reason'],
             'status' => LeaveRequest::STATUS_PENDING,
         ]);
+
+        $admins = User::role('school_admin')->where('school_id', $user->school_id)->get();
+        if ($admins->isNotEmpty()) {
+            $type = $user->hasRole('parent') ? 'Student' : 'Staff';
+            Notification::send($admins, new LeaveRequestSubmitted(
+                $user->name,
+                $type,
+                $validated['fromDate'],
+                $validated['toDate'],
+                $validated['reason']
+            ));
+        }
 
         $this->closeForm();
         session()->flash('message', 'Leave request submitted.');

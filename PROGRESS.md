@@ -88,7 +88,7 @@ here instead of inventing a separate one.
 | 55 | Reporting System | 🟡 Partial — attendance/exam/fee reports with CSV export done; no PDF export |
 | 56 | Owner Analytics | ❌ Not started — no cross-school Super Admin analytics dashboard |
 | 57 | AI Features | ❌ Not started (SRS: Phase 3) |
-| 58 | Notifications | 🟡 Partial — in-app + email (timetable changes) done; SMS/WhatsApp/push not done |
+| 58 | Notifications | ✅ Done — in-app + email notifications for timetable changes, account creation, fee invoices/payments, homework, attendance, leave, and announcements |
 | 59 | Search | ❌ Not started — no global cross-module search |
 | 60 | Audit Logs | ✅ Done this session (generic audit trail on key models + School Admin viewer) |
 | 61 | Security Requirements | 🟡 Partial — Laravel/Breeze auth, CSRF, validation, role middleware in place; no explicit rate-limiting review, account lockout, or field-level encryption yet |
@@ -230,7 +230,7 @@ Defaulters extend the existing Phase 3 Fees/Reports sections in place.)
 | Advanced search (multi-field/filter combos beyond name/email/admission no.) | ❌ Not started |
 | Timetable builder (manual or automated) | ❌ Not started |
 | Student/Teacher profile detail pages (currently list + modal edit only, no dedicated profile view) | ❌ Not started |
-| Email notification of generated password to new Teacher/Student accounts | ❌ Not started — password is shown once in a dismissible banner after creation instead (no mail integration yet) |
+| Email notification of generated password to new Teacher/Student accounts | ✅ Done (via `AccountCreated` notification on mail + database channels) |
 
 ### Notes / design choices made this session
 
@@ -264,7 +264,7 @@ Defaulters extend the existing Phase 3 Fees/Reports sections in place.)
 | Attendance marking UI (mobile-first chip buttons, "mark all" shortcuts) shared by Teacher (own class-teacher sections only) and School Admin (all sections in school) | ✅ Done |
 | Student/Parent "My Attendance" view (monthly summary + history, parent has a child switcher) | ✅ Done |
 | Routes + nav wired for school-admin/teacher/student/parent | ✅ Done |
-| Absence notifications (SMS/email/push) | ❌ Not started — deferred to Phase 4 (Communication) |
+| Absence notifications (SMS/email/push) | ✅ Done (email + in-app) — SMS/WhatsApp/push not done |
 | Attendance analytics/exports (CSV/PDF reports) | ❌ Not started |
 | Fees & Finance: fee structures CRUD (School Admin) | ✅ Done |
 | Fees & Finance: invoice generation (single student / whole class / whole school, from a structure template or custom) | ✅ Done |
@@ -537,7 +537,7 @@ No changes were needed to these files this session.
 | Item | Status |
 |---|---|
 | Communication: Announcements (School Admin CRUD — title/body/audience/optional class scope/immediate or scheduled publish; read-only feed for Teacher/Student/Parent, audience + class filtered) | ✅ Done |
-| Communication: email/SMS/push delivery of announcements | ❌ Not started — in-app feed only for now, no mail/SMS provider configured |
+| Communication: email/SMS/push delivery of announcements | 🟡 Partial — email delivery via notifications done; SMS/WhatsApp/push not done |
 | Communication: real-time chat / direct messaging (teacher↔parent) | ❌ Not started |
 | Public CMS front page (hero/about/announcements/admissions/blog/gallery/contact) | ❌ Not started |
 | Admin CMS (WYSIWYG, media library, SEO, scheduled publishing) | ❌ Not started |
@@ -1131,3 +1131,72 @@ details, and an improvement pass). Also fixed a hidden seed bug it surfaced.
 - `app/Livewire/SchoolAdmin/Fees/Invoices.php` + `fees/invoices.blade.php`
   (waivers/discounts)
 - `routes/web.php` (5 new routes), `database/seeders/DemoDataSeeder.php`
+
+## Session — Bug Fixes, Email Notifications & MVP Deployment Prep
+
+### Sidenav active-state bug fix
+- **Bug**: When navigating to "Staff Attendance" (Operations group), the
+  "Staff" link (Academic group) also appeared active because both routes share
+  the prefix `school-admin.staff` — the prefix-matching logic in
+  `sidebar-nav.blade.php` was not scoped per-group.
+- **Fix**: Rewrote active-state detection in
+  `resources/views/components/sidebar-nav.blade.php` to use a two-pass
+  approach: first find the **exact** route match (preferred), then fall back
+  to prefix match only if no exact match exists. This correctly resolves
+  `school-admin.staff.attendance` (exact match in Operations) over
+  `school-admin.staff` (prefix match in Academic).
+
+### Email notifications — 8 new notification classes
+Created `app/Notifications/` classes implementing both `mail` and `database`
+channels:
+
+| Notification | Trigger | Recipients |
+|---|---|---|
+| `AccountCreated` | New Student/Teacher/Staff/Admission enrollment | The newly created user |
+| `FeeInvoiceGenerated` | Fee invoice generated | Student |
+| `FeePaymentReceived` | Payment recorded against invoice | Student |
+| `HomeworkAssigned` | New homework created | All students in the class |
+| `AbsenceRecorded` | Student marked absent | Student's guardians |
+| `LeaveRequestSubmitted` | Leave request created | School Admin(s) |
+| `LeaveRequestUpdated` | Leave approved/rejected | The requester |
+| `AnnouncementPublished` | Announcement published immediately | Audience-filtered users |
+
+### Notification wiring in Livewire components
+- `SchoolAdmin\Students\Manage` — dispatches `AccountCreated` on new student
+- `SchoolAdmin\Teachers\Manage` — dispatches `AccountCreated` on new teacher
+- `SchoolAdmin\Staff\Manage` — dispatches `AccountCreated` on new staff
+- `SchoolAdmin\Admissions\Manage` — dispatches `AccountCreated` on enrollment
+- `SchoolAdmin\Fees\Invoices` — dispatches `FeeInvoiceGenerated` per student
+  on invoice generation + `FeePaymentReceived` on payment recording
+  (also fixed N+1 by adding `with('user')` eager loading)
+- `Attendance\Mark` — dispatches `AbsenceRecorded` to guardians when a
+  student is marked absent
+- `Homework\Manage` — dispatches `HomeworkAssigned` to all students in the
+  class on new homework creation
+- `Leave\MyLeave` — dispatches `LeaveRequestSubmitted` to School Admin(s)
+  on submission
+- `SchoolAdmin\Leave\Manage` — dispatches `LeaveRequestUpdated` to requester
+  on approve/reject
+- `SchoolAdmin\Announcements\Manage` — dispatches `AnnouncementPublished` to
+  audience-filtered recipients (class-scoped targets students+guardians in that
+  class + all teachers)
+
+### Production configuration
+- Updated `.env.example` with MySQL defaults (`DB_CONNECTION=mysql`),
+  Hostinger SMTP mail config (`smtp.hostinger.com:587`), and production-ready
+  `APP_NAME`.
+
+### Files added/changed this session
+- `resources/views/components/sidebar-nav.blade.php` (active-state fix)
+- `app/Notifications/{AccountCreated,FeeInvoiceGenerated,FeePaymentReceived,
+  HomeworkAssigned,AbsenceRecorded,LeaveRequestSubmitted,LeaveRequestUpdated,
+  AnnouncementPublished}.php` (8 new notification classes)
+- `app/Livewire/SchoolAdmin/{Students,Teachers,Staff}/Manage.php` (AccountCreated dispatch)
+- `app/Livewire/SchoolAdmin/Admissions/Manage.php` (AccountCreated dispatch)
+- `app/Livewire/SchoolAdmin/Fees/Invoices.php` (FeeInvoiceGenerated + FeePaymentReceived dispatches, eager loading fix)
+- `app/Livewire/Attendance/Mark.php` (AbsenceRecorded dispatch)
+- `app/Livewire/Homework/Manage.php` (HomeworkAssigned dispatch)
+- `app/Livewire/Leave/MyLeave.php` (LeaveRequestSubmitted dispatch)
+- `app/Livewire/SchoolAdmin/Leave/Manage.php` (LeaveRequestUpdated dispatch)
+- `app/Livewire/SchoolAdmin/Announcements/Manage.php` (AnnouncementPublished dispatch)
+- `.env.example` (production-ready defaults)

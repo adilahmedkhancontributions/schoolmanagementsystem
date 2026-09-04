@@ -7,7 +7,9 @@ use App\Models\Document;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use App\Models\User;
+use App\Notifications\AccountCreated;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -340,6 +342,8 @@ class Manage extends Component
             'status' => Admission::STATUS_ENROLLED,
             'enrolled_student_id' => $student->id,
         ]);
+
+        Notification::send($user, new AccountCreated('Student', $admission->email, $password));
 
         $this->generatedPassword = $password;
     }
