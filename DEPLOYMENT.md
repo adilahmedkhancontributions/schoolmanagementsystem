@@ -78,9 +78,9 @@ APP_URL=https://yourdomain.com
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=u123456789_school
-DB_USERNAME=u123456789_admin
-DB_PASSWORD=your_database_password
+DB_DATABASE=u456734894_smsdb
+DB_USERNAME=u456734894_smsdb
+DB_PASSWORD=Smsdbpassword5388
 
 # Sessions (database-backed, configured by default)
 SESSION_DRIVER=database

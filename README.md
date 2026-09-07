@@ -1,4 +1,5 @@
 # School Management System
+ssh pass= Smsdbpassword5388@
 
 A full-featured, multi-role School Management System built with Laravel 11,
 Livewire 4, Tailwind CSS 3, Alpine.js 3, and Spatie Laravel Permission.

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('teacher_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
 
-            $table->unique(['section_id', 'timetable_slot_id', 'day_of_week']);
+            $table->unique(['section_id', 'timetable_slot_id', 'day_of_week'], 'tt_section_slot_day_unique');
         });
     }
 
